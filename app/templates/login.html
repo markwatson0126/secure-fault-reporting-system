@@ -1,35 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container d-flex justify-content-center align-items-center vh-100">
-    <div class="col-md-4">
-        <h2 class="mb-4 text-center">Login</h2>
+{% extends "base.html" %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Sign in</h1>
 
         {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
+        <div class="govuk-error-summary" data-module="govuk-error-summary">
+            <div role="alert">
+                <h2 class="govuk-error-summary__title">There is a problem</h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        <li><a href="#username">{{ error }}</a></li>
+                    </ul>
+                </div>
             </div>
+        </div>
         {% endif %}
 
         <form method="post">
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" name="username" required>
+            <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
+                <label class="govuk-label" for="username">Username</label>
+                {% if error %}<p id="username-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ error }}</p>{% endif %}
+                <input class="govuk-input govuk-input--width-20" id="username" name="username" type="text" autocomplete="username" required{% if error %} aria-describedby="username-error"{% endif %}>
             </div>
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" required>
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="password">Password</label>
+                <input class="govuk-input govuk-input--width-20" id="password" name="password" type="password" autocomplete="current-password" required>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button class="govuk-button" data-module="govuk-button" type="submit">Sign in</button>
         </form>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}

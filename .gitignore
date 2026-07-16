@@ -9,6 +9,9 @@ venv/
 .venv/
 env/
 
+# Node dependencies
+node_modules/
+
 # Testing/cache
 .pytest_cache/
 .coverage
