@@ -10,7 +10,7 @@ A Flask and SQLite web application for reporting and resolving building maintena
 - Administrator-only user creation and fault deletion
 - Role-based access for standard users and administrators
 - SQLite persistence using the Python `sqlite3` module
-- Bootstrap-based HTML templates
+- GOV.UK Design System components with non-GOV.UK branding
 
 ## Technology
 
@@ -19,7 +19,8 @@ A Flask and SQLite web application for reporting and resolving building maintena
 - Flask-Login
 - SQLite
 - Jinja2
-- Bootstrap 5
+- GOV.UK Frontend
+- Node.js and npm for frontend assets
 - pytest
 - Gunicorn
 
@@ -29,7 +30,14 @@ A Flask and SQLite web application for reporting and resolving building maintena
 secure-fault-reporting-system/
 |-- app/
 |   |-- static/
+|   |   |-- css/
+|   |   |   `-- application.css
+|   |   |-- js/
+|   |   |   `-- govuk-frontend.min.js
+|   |   `-- src/
+|   |       `-- application.scss
 |   |-- templates/
+|   |   |-- base.html
 |   |   |-- index.html
 |   |   `-- login.html
 |   |-- __init__.py
@@ -39,9 +47,14 @@ secure-fault-reporting-system/
 |   `-- validation.py
 |-- diagrams/
 |   `-- FaultReporterERD.png
+|-- scripts/
+|   `-- copy-govuk-assets.mjs
 |-- tests/
 |   `-- test_routes.py
+|-- .gitattributes
 |-- .gitignore
+|-- package-lock.json
+|-- package.json
 |-- Procfile
 |-- README.md
 |-- requirements.txt
@@ -71,6 +84,8 @@ source .venv/bin/activate
 
 ```bash
 python -m pip install -r requirements.txt
+npm install
+npm run build
 ```
 
 ### 3. Run the application

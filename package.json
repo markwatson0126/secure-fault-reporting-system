@@ -1,0 +1,26 @@
+{
+  "name": "secure-fault-reporting-system",
+  "version": "1.0.0",
+  "description": "A Flask and SQLite web application for reporting and resolving building maintenance faults. This project is being developed for a Level 6 Software Engineering and DevOps assignment.",
+  "private": true,
+  "scripts": {
+    "build": "sass --pkg-importer=node app/static/src/application.scss app/static/css/application.css --style=compressed --no-source-map --quiet-deps && node scripts/copy-govuk-assets.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markwatson0126/secure-fault-reporting-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/markwatson0126/secure-fault-reporting-system/issues"
+  },
+  "homepage": "https://github.com/markwatson0126/secure-fault-reporting-system#readme",
+  "dependencies": {
+    "govuk-frontend": "^6.3.0"
+  },
+  "devDependencies": {
+    "sass": "^1.79.0"
+  }
+}
