@@ -4,8 +4,10 @@ from datetime import datetime
 
 from flask import Flask
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 
 def create_app(test_config=None):
@@ -23,6 +25,7 @@ def create_app(test_config=None):
 
     login_manager.init_app(app)
     login_manager.login_view = "login"
+    csrf.init_app(app)
 
     @app.template_filter("datetimeformat")
     def format_datetime(value):

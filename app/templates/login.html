@@ -21,6 +21,7 @@
         {% endif %}
 
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
                 <label class="govuk-label" for="username">Username</label>
                 {% if error %}<p id="username-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ error }}</p>{% endif %}
