@@ -7,6 +7,21 @@
     <div class="govuk-grid-column-two-thirds">
         <h1 class="govuk-heading-xl">Sign in</h1>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="registration-success-title" data-module="govuk-notification-banner">
+                    <div class="govuk-notification-banner__header">
+                        <h2 class="govuk-notification-banner__title" id="registration-success-title">Success</h2>
+                    </div>
+                    <div class="govuk-notification-banner__content">
+                        <p class="govuk-notification-banner__heading">{{ message }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+
         {% if error %}
         <div class="govuk-error-summary" data-module="govuk-error-summary">
             <div role="alert">
@@ -35,6 +50,8 @@
 
             <button class="govuk-button" data-module="govuk-button" type="submit">Sign in</button>
         </form>
+
+        <p class="govuk-body"><a class="govuk-link" href="{{ url_for('register') }}">Create an account</a></p>
     </div>
 </div>
 {% endblock %}
