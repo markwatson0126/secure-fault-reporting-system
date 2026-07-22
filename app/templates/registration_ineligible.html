@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}You cannot create an account{% endblock %}
+{% block content %}<div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds"><h1 class="govuk-heading-xl">You cannot create an account</h1><p class="govuk-body">Your email address is not currently accepted for the selected building.</p><p class="govuk-body">Contact the Estates team for your building if you need access to this service.</p><p class="govuk-body"><a class="govuk-link" href="{{ url_for('register') }}">Return to create an account</a></p></div></div>{% endblock %}

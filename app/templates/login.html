@@ -1,57 +1,31 @@
 {% extends "base.html" %}
-
-{% block title %}Sign in{% endblock %}
-
+{% block title %}{% if error %}Error: {% endif %}Sign in{% endblock %}
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">Sign in</h1>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                {% if category == 'success' %}
-                <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="registration-success-title" data-module="govuk-notification-banner">
-                    <div class="govuk-notification-banner__header">
-                        <h2 class="govuk-notification-banner__title" id="registration-success-title">Success</h2>
-                    </div>
-                    <div class="govuk-notification-banner__content">
-                        <p class="govuk-notification-banner__heading">{{ message }}</p>
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-        {% endwith %}
-
-        {% if error %}
-        <div class="govuk-error-summary" data-module="govuk-error-summary">
-            <div role="alert">
-                <h2 class="govuk-error-summary__title">There is a problem</h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        <li><a href="#username">{{ error }}</a></li>
-                    </ul>
-                </div>
+<div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds">
+    {% if error %}
+    <div class="govuk-error-summary" data-module="govuk-error-summary"><div role="alert">
+        <h2 class="govuk-error-summary__title">There is a problem</h2>
+        <div class="govuk-error-summary__body"><ul class="govuk-list govuk-error-summary__list"><li><a href="#email">{{ error }}</a></li></ul></div>
+    </div>
+    {% endif %}
+    <h1 class="govuk-heading-xl">Sign in</h1>
+    <form method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
+            <label class="govuk-label" for="email">Email address</label>
+            {% if error %}<p id="email-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ error }}</p>{% endif %}
+            <input class="govuk-input govuk-input--width-20{% if error %} govuk-input--error{% endif %}" id="email" name="email" type="email" value="{{ email }}" autocomplete="email" spellcheck="false" maxlength="254"{% if error %} aria-describedby="email-error"{% endif %}>
+        </div>
+        <div class="govuk-form-group govuk-password-input{% if error %} govuk-form-group--error{% endif %}" data-module="govuk-password-input">
+            <label class="govuk-label" for="password">Password</label>
+            {% if error %}<p id="password-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ error }}</p>{% endif %}
+            <div class="govuk-input__wrapper govuk-password-input__wrapper">
+                <input class="govuk-input govuk-password-input__input govuk-js-password-input-input{% if error %} govuk-input--error{% endif %}" id="password" name="password" type="password" autocomplete="current-password" spellcheck="false" autocapitalize="none"{% if error %} aria-describedby="password-error"{% endif %}>
+                <button type="button" class="govuk-button govuk-button--secondary govuk-password-input__toggle govuk-js-password-input-toggle" data-module="govuk-button" aria-controls="password" aria-label="Show password" hidden>Show</button>
             </div>
         </div>
-        {% endif %}
-
-        <form method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="govuk-form-group{% if error %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="username">Username</label>
-                {% if error %}<p id="username-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ error }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="username" name="username" type="text" autocomplete="username" required{% if error %} aria-describedby="username-error"{% endif %}>
-            </div>
-
-            <div class="govuk-form-group">
-                <label class="govuk-label" for="password">Password</label>
-                <input class="govuk-input govuk-input--width-20" id="password" name="password" type="password" autocomplete="current-password" required>
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button" type="submit">Sign in</button>
-        </form>
-
-        <p class="govuk-body"><a class="govuk-link" href="{{ url_for('register') }}">Create an account</a></p>
-    </div>
-</div>
+        <button class="govuk-button" data-module="govuk-button" type="submit">Sign in</button>
+    </form>
+    <p class="govuk-body"><a class="govuk-link" href="{{ url_for('register') }}">Create an account</a></p>
+</div></div>
 {% endblock %}
