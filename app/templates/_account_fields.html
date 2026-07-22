@@ -1,0 +1,38 @@
+{% macro fields(errors, values, buildings, include_role=false) %}
+<div class="govuk-form-group{% if errors.get('email') %} govuk-form-group--error{% endif %}">
+    <label class="govuk-label" for="email">Email address</label>
+    {% if errors.get('email') %}<p id="email-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.email }}</p>{% endif %}
+    <input class="govuk-input govuk-input--width-20{% if errors.get('email') %} govuk-input--error{% endif %}" id="email" name="email" type="email" value="{{ values.email }}" autocomplete="email" spellcheck="false" maxlength="254"{% if errors.get('email') %} aria-describedby="email-error"{% endif %}>
+</div>
+{% for field, label, autocomplete in [('first_name', 'First name', 'given-name'), ('last_name', 'Last name', 'family-name')] %}
+<div class="govuk-form-group{% if errors.get(field) %} govuk-form-group--error{% endif %}">
+    <label class="govuk-label" for="{{ field }}">{{ label }}</label>
+    {% if errors.get(field) %}<p id="{{ field }}-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors[field] }}</p>{% endif %}
+    <input class="govuk-input govuk-input--width-20{% if errors.get(field) %} govuk-input--error{% endif %}" id="{{ field }}" name="{{ field }}" type="text" value="{{ values[field] }}" autocomplete="{{ autocomplete }}" spellcheck="false" maxlength="100"{% if errors.get(field) %} aria-describedby="{{ field }}-error"{% endif %}>
+</div>
+{% endfor %}
+<div class="govuk-form-group{% if errors.get('building_id') %} govuk-form-group--error{% endif %}">
+    <label class="govuk-label" for="building_id">Building or work location</label>
+    {% if errors.get('building_id') %}<p id="building_id-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.building_id }}</p>{% endif %}
+    <select class="govuk-select{% if errors.get('building_id') %} govuk-select--error{% endif %}" id="building_id" name="building_id"{% if errors.get('building_id') %} aria-describedby="building_id-error"{% endif %}>
+        <option value="">Select a building or work location</option>
+        {% for building in buildings %}<option value="{{ building.id }}"{% if values.building_id|string == building.id|string %} selected{% endif %}>{{ building.name }}</option>{% endfor %}
+    </select>
+</div>
+{% if include_role %}
+<div class="govuk-form-group{% if errors.get('role') %} govuk-form-group--error{% endif %}">
+    <label class="govuk-label" for="role">Role</label>
+    {% if errors.get('role') %}<p id="role-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.role }}</p>{% endif %}
+    <select class="govuk-select{% if errors.get('role') %} govuk-select--error{% endif %}" id="role" name="role"{% if errors.get('role') %} aria-describedby="role-error"{% endif %}><option value="user"{% if values.role == 'user' %} selected{% endif %}>User</option><option value="admin"{% if values.role == 'admin' %} selected{% endif %}>Administrator</option></select>
+</div>
+{% endif %}
+<div class="govuk-form-group govuk-password-input{% if errors.get('password') %} govuk-form-group--error{% endif %}" data-module="govuk-password-input">
+    <label class="govuk-label" for="password">Password</label>
+    <div id="password-hint" class="govuk-hint">Use at least 12 characters. Do not use a common password.</div>
+    {% if errors.get('password') %}<p id="password-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.password }}</p>{% endif %}
+    <div class="govuk-input__wrapper govuk-password-input__wrapper">
+        <input class="govuk-input govuk-password-input__input govuk-js-password-input-input{% if errors.get('password') %} govuk-input--error{% endif %}" id="password" name="password" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="none" aria-describedby="password-hint{% if errors.get('password') %} password-error{% endif %}">
+        <button type="button" class="govuk-button govuk-button--secondary govuk-password-input__toggle govuk-js-password-input-toggle" data-module="govuk-button" aria-controls="password" aria-label="Show password" hidden>Show</button>
+    </div>
+</div>
+{% endmacro %}

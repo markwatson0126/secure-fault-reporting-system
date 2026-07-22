@@ -1,64 +1,12 @@
 {% extends "base.html" %}
-
-{% block title %}Create an account{% endblock %}
-
+{% from "_account_fields.html" import fields %}
+{% block title %}{% if errors %}Error: {% endif %}Create an account{% endblock %}
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">Create an account</h1>
-
-        {% if errors %}
-        <div class="govuk-error-summary" data-module="govuk-error-summary">
-            <div role="alert">
-                <h2 class="govuk-error-summary__title">There is a problem</h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        {% for field, message in errors.items() %}
-                        <li><a href="#{{ field|replace('_', '-') }}">{{ message }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <form method="post" novalidate>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="govuk-form-group{% if errors.get('username') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="username">Username</label>
-                <div id="username-hint" class="govuk-hint">Use 3 to 30 letters, numbers, full stops, underscores or hyphens.</div>
-                {% if errors.get('username') %}<p id="username-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors['username'] }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="username" name="username" type="text" value="{{ values['username'] }}" autocomplete="username" aria-describedby="username-hint{% if errors.get('username') %} username-error{% endif %}">
-            </div>
-
-            <div class="govuk-form-group{% if errors.get('first_name') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="first-name">First name</label>
-                {% if errors.get('first_name') %}<p id="first-name-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors['first_name'] }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="first-name" name="first_name" type="text" value="{{ values['first_name'] }}" autocomplete="given-name"{% if errors.get('first_name') %} aria-describedby="first-name-error"{% endif %}>
-            </div>
-
-            <div class="govuk-form-group{% if errors.get('last_name') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="last-name">Last name</label>
-                {% if errors.get('last_name') %}<p id="last-name-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors['last_name'] }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="last-name" name="last_name" type="text" value="{{ values['last_name'] }}" autocomplete="family-name"{% if errors.get('last_name') %} aria-describedby="last-name-error"{% endif %}>
-            </div>
-
-            <div class="govuk-form-group{% if errors.get('password') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="password">Password</label>
-                <div id="password-hint" class="govuk-hint">Your password must be at least 12 characters.</div>
-                {% if errors.get('password') %}<p id="password-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors['password'] }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="password" name="password" type="password" autocomplete="new-password" aria-describedby="password-hint{% if errors.get('password') %} password-error{% endif %}">
-            </div>
-
-            <div class="govuk-form-group{% if errors.get('confirm_password') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="confirm-password">Confirm password</label>
-                {% if errors.get('confirm_password') %}<p id="confirm-password-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors['confirm_password'] }}</p>{% endif %}
-                <input class="govuk-input govuk-input--width-20" id="confirm-password" name="confirm_password" type="password" autocomplete="new-password"{% if errors.get('confirm_password') %} aria-describedby="confirm-password-error"{% endif %}>
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button" type="submit">Create account</button>
-        </form>
-    </div>
-</div>
+<div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds">
+    {% if errors %}
+    <div class="govuk-error-summary" data-module="govuk-error-summary"><div role="alert"><h2 class="govuk-error-summary__title">There is a problem</h2><div class="govuk-error-summary__body"><ul class="govuk-list govuk-error-summary__list">{% for field, message in errors.items() %}<li><a href="#{{ field }}">{{ message }}</a></li>{% endfor %}</ul></div></div></div>
+    {% endif %}
+    <h1 class="govuk-heading-xl">Create an account</h1>
+    <form method="post" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{{ fields(errors, values, buildings) }}<button class="govuk-button" data-module="govuk-button" type="submit">Create an account</button></form>
+</div></div>
 {% endblock %}

@@ -30,7 +30,11 @@
     {% if current_user.is_authenticated %}
     <div class="app-account-bar">
         <div class="govuk-width-container">
-            <span class="govuk-body-s">Signed in as <strong>{{ current_user.username }}</strong></span>
+            <span class="govuk-body-s">Signed in as <strong>{{ current_user.first_name }} {{ current_user.last_name }}</strong></span>
+            {% if current_user.role == 'admin' %}
+            <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_users') }}">Users</a>
+            <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_domains') }}">Email domains</a>
+            {% endif %}
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('logout') }}">Sign out</a>
         </div>
     </div>
@@ -38,6 +42,14 @@
 
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-width-container">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+            {% if category == 'success' %}
+            <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="success-title" data-module="govuk-notification-banner">
+                <div class="govuk-notification-banner__header"><h2 class="govuk-notification-banner__title" id="success-title">Success</h2></div>
+                <div class="govuk-notification-banner__content"><p class="govuk-notification-banner__heading">{{ message }}</p></div>
+            </div>
+            {% endif %}
+            {% endfor %}
             {% block content %}{% endblock %}
         </div>
     </main>
