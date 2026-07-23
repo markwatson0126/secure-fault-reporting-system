@@ -7,7 +7,7 @@ A Flask and SQLite demonstration application for reporting and resolving buildin
 - Email addresses are the case-insensitive account and sign-in identifier.
 - Every account belongs to one named regional centre.
 - Public account creation is available only when the exact email domain is active for the selected building.
-- Estates administrators can see users and manage accepted domains only for their own building.
+- Estates administrators can view and search users across all regional centres; user creation and accepted-domain administration remain limited to their own regional centre.
 - Faults are reported against a selected named regional centre.
 - Fault lists display submitters' full names, never their email addresses.
 - Flask-Login, global CSRF protection, Werkzeug password hashing and throttled login POSTs protect account journeys.
@@ -39,7 +39,7 @@ The database seeds exactly these 14 regional centres idempotently: Belfast, Birm
 
 ## Estates administration
 
-After signing in, an administrator can open **Users** to see accounts in their building and create users or administrators assigned to that same building. **Email domains** lists active and inactive entries for their building. Administrators can add, deactivate and reactivate entries. Entries are retained rather than deleted and can be reactivated. Deactivation metadata represents the current inactive state and is cleared when an entry is reactivated. Deactivation affects new registrations only. Python permission checks and building-scoped SQL enforce this scope, including crafted requests.
+After signing in, an administrator can open **Users** to view and search all user accounts across regional centres. They can create users or administrators only for their own regional centre. The **Regional centre** field is pre-selected and locked on the **Create a user** form. Server-side validation prevents crafted cross-centre user-creation requests. **Email domains** lists active and inactive entries only for the administrator's own centre. Administrators can add, deactivate and reactivate entries for that centre. Entries are retained rather than deleted and can be reactivated. Deactivation metadata represents the current inactive state and is cleared when an entry is reactivated. Deactivation affects new registrations only.
 
 ### Create an administrator securely
 
@@ -68,7 +68,7 @@ INITIAL_ADMIN_BUILDING
 2. Open **Email domains** and add the domain after the `@` in the tutor's email address.
 3. The tutor opens **Create an account** and selects that same building.
 4. The tutor registers with their own email address.
-5. Open **Users** as the administrator to demonstrate building-scoped visibility.
+5. Open **Users** as the administrator to demonstrate organisation-wide user visibility, including each user's regional centre.
 
 ## Assessment database
 
@@ -199,7 +199,7 @@ Frontend source is in `app/static/src/application.scss`. `npm run build` compile
 
 ## Privacy and security decisions
 
-Email addresses are personal data. They are not placed in URLs or shown in general fault listings. Only an administrator for the same building can browse an account email. Password hashes are never rendered. SQL values are parameterised, CSRF remains globally enabled, unsafe post-login redirect targets are rejected, and login errors do not disclose whether an account exists.
+Email addresses are personal data. They are not placed in URLs or shown in general fault listings. Only authenticated administrators can browse account email addresses. Password hashes are never rendered. SQL values are parameterised, CSRF remains globally enabled, unsafe post-login redirect targets are rejected, and login errors do not disclose whether an account exists.
 
 ## Security limitations
 
