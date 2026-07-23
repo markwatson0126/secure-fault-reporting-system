@@ -5,9 +5,10 @@ A Flask and SQLite demonstration application for reporting and resolving buildin
 ## Features
 
 - Email addresses are the case-insensitive account and sign-in identifier.
-- Every account belongs to one building or work location.
+- Every account belongs to one named regional centre.
 - Public account creation is available only when the exact email domain is active for the selected building.
 - Estates administrators can see users and manage accepted domains only for their own building.
+- Faults are reported against a selected named regional centre.
 - Fault lists display submitters' full names, never their email addresses.
 - Flask-Login, global CSRF protection, Werkzeug password hashing and throttled login POSTs protect account journeys.
 - GOV.UK Frontend 6.3.0 provides form, error-summary, notification, table, select and password-input components with non-GOV.UK service branding.
@@ -30,11 +31,11 @@ On macOS or Linux, activate with `source .venv/bin/activate` and export `SECRET_
 
 ## Accounts, buildings and email eligibility
 
-The public **Create an account** journey asks for email address, first name, last name, building or work location, and password. Email addresses are trimmed, validated without DNS queries, normalised to lowercase and stored with case-insensitive uniqueness. Registration does not sign the user in.
+The public **Create an account** journey asks for email address, first name, last name, regional centre, and password. Email addresses are trimmed, validated without DNS queries, normalised to lowercase and stored with case-insensitive uniqueness. Registration does not sign the user in.
 
-The selected active building must contain an active allowed-domain record matching the part after the final `@` exactly. Wildcards, substring matching and subdomain inheritance are not supported: `digital.hmrc.gov.uk` does not match `hmrc.gov.uk`. There is no public bypass.
+The selected active regional centre must contain an active allowed-domain record matching the part after the final `@` exactly. Wildcards, substring matching and subdomain inheritance are not supported: `digital.hmrc.gov.uk` does not match `hmrc.gov.uk`. There is no public bypass.
 
-The database seeds these buildings idempotently: Belfast, Birmingham, Bristol, Cardiff, Croydon, Edinburgh, Glasgow, Leeds, Liverpool, Manchester, Newcastle, Nottingham, Portsmouth, Stratford, and Other government or partner location. `hmrc.gov.uk` is seeded for each named HMRC regional centre, but not for Other government or partner location.
+The database seeds exactly these 14 regional centres idempotently: Belfast, Birmingham, Bristol, Cardiff, Croydon, Edinburgh, Glasgow, Leeds, Liverpool, Manchester, Newcastle, Nottingham, Portsmouth and Stratford. `hmrc.gov.uk` is seeded for all 14.
 
 ## Estates administration
 
@@ -42,7 +43,7 @@ After signing in, an administrator can open **Users** to see accounts in their b
 
 ### Create an administrator securely
 
-Deployment operators can create an administrator for any active building. The password is hidden and cannot be supplied as a command-line option:
+Deployment operators can create an administrator for any active regional centre. The password is hidden and cannot be supplied as a command-line option:
 
 ```powershell
 $env:FLASK_APP = "run.py"
@@ -77,11 +78,11 @@ Passwords must contain at least 12 characters. Spaces and ordinary Unicode chara
 
 Only POST login attempts are limited. `LOGIN_RATE_LIMIT` defaults to `5 per minute`; GET requests remain available. Flask-Limiter uses `RATELIMIT_STORAGE_URI`, which defaults to `memory://` for local use and deterministic isolated tests. In-memory storage is not suitable for multi-process production deployment. Configure shared storage such as Redis in production.
 
-## Database and migration
+## Database initialisation
 
-The application creates or upgrades `instance/app.db` automatically and idempotently on the first application request. The `flask create-admin` command also initialises or migrates the database before creating the administrator. Do not delete the database. The migration creates buildings before foreign-keyed account data, changes legacy `username` accounts to `email`, retains IDs, password hashes, names, roles and fault relationships, and assigns migrated users to **Other government or partner location**.
+The application initialises `instance/app.db` automatically and idempotently on the first application request. The `flask create-admin` command also initialises the database before creating the administrator. SQLite foreign keys are enabled on every application connection and checked after initialisation.
 
-Legacy usernames that are valid emails are lowercased. Other values become deterministic `legacy-<user-id>@migration-placeholder.internal` internal migration placeholders, with a suffix only if required for uniqueness. These placeholders are syntactically valid account identifiers but are not intended for email delivery. SQLite foreign keys are enabled on every application connection and checked after migration. `schema.sql` is non-destructive and can initialise a new database.
+The application does not migrate older database schemas. When the schema changes during development, recreate the local database and then recreate the administrator securely. Back up any data that must be retained before replacing a database.
 
 ### Current entity relationship diagram
 
@@ -89,6 +90,7 @@ Legacy usernames that are valid emails are lowercased. Other values become deter
 erDiagram
     BUILDINGS ||--o{ USERS : has
     BUILDINGS ||--o{ ALLOWED_EMAIL_DOMAINS : allows
+    BUILDINGS ||--o{ FAULTS : receives
     USERS o|--o{ ALLOWED_EMAIL_DOMAINS : creates
     USERS o|--o{ ALLOWED_EMAIL_DOMAINS : deactivates
     USERS ||--o{ FAULTS : submits
@@ -125,7 +127,7 @@ erDiagram
         INTEGER id PK
         TEXT title
         TEXT description
-        TEXT location
+        INTEGER building_id FK
         TEXT status
         INTEGER submitted_by FK
         INTEGER closed_by FK
@@ -134,7 +136,7 @@ erDiagram
     }
 ```
 
-Back up the database before deploying any schema change, install the updated requirements, deploy the code, and start one application instance to perform the migration before scaling out.
+Production schema changes require a separately designed and tested migration process; deleting and recreating a production database is not appropriate.
 
 ## Development and verification
 

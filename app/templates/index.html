@@ -7,7 +7,13 @@
         <form method="post" action="{{ url_for('submit_fault') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="govuk-form-group"><label class="govuk-label" for="title">Title</label><input class="govuk-input" id="title" name="title" type="text" required></div>
             <div class="govuk-form-group"><label class="govuk-label" for="description">Description</label><textarea class="govuk-textarea" id="description" name="description" rows="5" required></textarea></div>
-            <div class="govuk-form-group"><label class="govuk-label" for="location">Location</label><input class="govuk-input govuk-input--width-20" id="location" name="location" type="text" required></div>
+            <div class="govuk-form-group">
+                <label class="govuk-label" for="building_id">Regional centre</label>
+                <select class="govuk-select" id="building_id" name="building_id" required>
+                    <option value="">Select a regional centre</option>
+                    {% for building in buildings %}<option value="{{ building.id }}"{% if building.id == selected_building_id %} selected{% endif %}>{{ building.name }}</option>{% endfor %}
+                </select>
+            </div>
             <button class="govuk-button" data-module="govuk-button" type="submit">Submit fault</button>
         </form>
     </div></details>
@@ -19,7 +25,7 @@
     <strong class="govuk-tag{% if fault.status == 'Closed' %} govuk-tag--green{% else %} govuk-tag--yellow{% endif %}">{{ fault.status }}</strong>
     <dl class="govuk-summary-list govuk-!-margin-top-4">
         <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Description</dt><dd class="govuk-summary-list__value">{{ fault.description }}</dd></div>
-        <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Location</dt><dd class="govuk-summary-list__value">{{ fault.location }}</dd></div>
+        <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Regional centre</dt><dd class="govuk-summary-list__value">{{ fault.building_name }}</dd></div>
         <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Submitted</dt><dd class="govuk-summary-list__value">{{ fault.submitted_by_name }} on {{ fault.date_created | datetimeformat }}</dd></div>
         {% if fault.status == 'Closed' and fault.closed_by_name and fault.date_closed %}<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Closed</dt><dd class="govuk-summary-list__value">{{ fault.closed_by_name }} on {{ fault.date_closed | datetimeformat }}</dd></div>{% endif %}
     </dl>
