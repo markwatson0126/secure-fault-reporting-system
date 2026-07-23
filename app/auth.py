@@ -13,6 +13,8 @@ from .validation import (
     validate_name, validate_password,
 )
 
+USER_SEARCH_MAX_LENGTH = 100
+
 
 class User(UserMixin):
     def __init__(self, id, email, role, building_id, first_name, last_name, building_name):
@@ -65,6 +67,10 @@ def _safe_next_url(value):
         not target.scheme and not target.netloc and value.startswith("/")
         and not value.startswith("//") and "\\" not in value
     ) else None
+
+
+def _escape_like(value):
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def _account_values(form=None, building_id=None):
@@ -192,16 +198,46 @@ def init_app(app, app_limiter):
     @app.route("/admin/users")
     @admin_required
     def admin_users():
-        users = get_db().execute(
-            """
+        filters = {
+            "first_name": clean_text(request.args.get("first_name")),
+            "last_name": clean_text(request.args.get("last_name")),
+            "email": clean_text(request.args.get("email")),
+            "role": clean_text(request.args.get("role")),
+        }
+        for field in ("first_name", "last_name", "email"):
+            if len(filters[field]) > USER_SEARCH_MAX_LENGTH:
+                abort(400)
+        if filters["role"] not in {"", "user", "admin"}:
+            abort(400)
+
+        conditions = ["users.building_id = ?"]
+        parameters = [current_user.building_id]
+        text_columns = {
+            "first_name": "users.first_name",
+            "last_name": "users.last_name",
+            "email": "users.email",
+        }
+        for field, column in text_columns.items():
+            if filters[field]:
+                conditions.append(
+                    f"{column} COLLATE NOCASE LIKE ? ESCAPE '\\'"
+                )
+                parameters.append(f"%{_escape_like(filters[field])}%")
+        if filters["role"]:
+            conditions.append("users.role = ?")
+            parameters.append(filters["role"])
+
+        query = f"""
             SELECT users.first_name, users.last_name, users.email, users.role,
                    buildings.name AS building_name
             FROM users JOIN buildings ON buildings.id = users.building_id
-            WHERE users.building_id = ? ORDER BY users.last_name, users.first_name
-            """,
-            (current_user.building_id,),
-        ).fetchall()
-        return render_template("admin/users.html", users=users)
+            WHERE {" AND ".join(conditions)}
+            ORDER BY users.last_name COLLATE NOCASE,
+                     users.first_name COLLATE NOCASE,
+                     users.id
+        """
+        users = get_db().execute(query, parameters).fetchall()
+        return render_template("admin/users.html", users=users, filters=filters)
 
     @app.route("/add_user", methods=["GET", "POST"])
     @admin_required

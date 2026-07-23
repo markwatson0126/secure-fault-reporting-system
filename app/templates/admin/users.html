@@ -1,3 +1,62 @@
 {% extends "base.html" %}
 {% block title %}Users{% endblock %}
-{% block content %}<h1 class="govuk-heading-xl">Users</h1><p class="govuk-body">Users assigned to {{ current_user.building_name }}.</p><p><a class="govuk-button" data-module="govuk-button" href="{{ url_for('add_user') }}">Create a user</a></p><table class="govuk-table"><caption class="govuk-table__caption govuk-table__caption--m">Building users</caption><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Full name</th><th class="govuk-table__header">Email address</th><th class="govuk-table__header">Role</th><th class="govuk-table__header">Building</th></tr></thead><tbody class="govuk-table__body">{% for user in users %}<tr class="govuk-table__row"><td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td><td class="govuk-table__cell">{{ user.email }}</td><td class="govuk-table__cell">{{ user.role }}</td><td class="govuk-table__cell">{{ user.building_name }}</td></tr>{% endfor %}</tbody></table>{% endblock %}
+{% block content %}
+<h1 class="govuk-heading-xl">Users</h1>
+<p class="govuk-body">Users assigned to {{ current_user.building_name }}.</p>
+
+<h2 class="govuk-heading-m">Search users</h2>
+<form method="get" action="{{ url_for('admin_users') }}">
+    <div class="govuk-form-group">
+        <label class="govuk-label" for="first_name">First name</label>
+        <input class="govuk-input govuk-input--width-20" id="first_name" name="first_name" type="text" value="{{ filters.first_name }}" maxlength="100">
+    </div>
+    <div class="govuk-form-group">
+        <label class="govuk-label" for="last_name">Last name</label>
+        <input class="govuk-input govuk-input--width-20" id="last_name" name="last_name" type="text" value="{{ filters.last_name }}" maxlength="100">
+    </div>
+    <div class="govuk-form-group">
+        <label class="govuk-label" for="email">Email address</label>
+        <input class="govuk-input govuk-input--width-20" id="email" name="email" type="text" value="{{ filters.email }}" maxlength="100" spellcheck="false">
+    </div>
+    <div class="govuk-form-group">
+        <label class="govuk-label" for="role">Role</label>
+        <select class="govuk-select" id="role" name="role">
+            <option value=""{% if not filters.role %} selected{% endif %}>All roles</option>
+            <option value="user"{% if filters.role == "user" %} selected{% endif %}>User</option>
+            <option value="admin"{% if filters.role == "admin" %} selected{% endif %}>Administrator</option>
+        </select>
+    </div>
+    <div class="govuk-button-group">
+        <button class="govuk-button" data-module="govuk-button" type="submit">Search users</button>
+        <a class="govuk-link" href="{{ url_for('admin_users') }}">Clear filters</a>
+    </div>
+</form>
+
+<p><a class="govuk-button" data-module="govuk-button" href="{{ url_for('add_user') }}">Create a user</a></p>
+
+{% if users %}
+<table class="govuk-table">
+    <caption class="govuk-table__caption govuk-table__caption--m">Building users</caption>
+    <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">Full name</th>
+            <th scope="col" class="govuk-table__header">Email address</th>
+            <th scope="col" class="govuk-table__header">Role</th>
+            <th scope="col" class="govuk-table__header">Building</th>
+        </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+        {% for user in users %}
+        <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
+            <td class="govuk-table__cell">{{ user.email }}</td>
+            <td class="govuk-table__cell">{{ user.role }}</td>
+            <td class="govuk-table__cell">{{ user.building_name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="govuk-body">No users match your filters.</p>
+{% endif %}
+{% endblock %}
