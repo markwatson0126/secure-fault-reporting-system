@@ -210,8 +210,8 @@ def init_app(app, app_limiter):
         if filters["role"] not in {"", "user", "admin"}:
             abort(400)
 
-        conditions = ["users.building_id = ?"]
-        parameters = [current_user.building_id]
+        conditions = []
+        parameters = []
         text_columns = {
             "first_name": "users.first_name",
             "last_name": "users.last_name",
@@ -227,11 +227,14 @@ def init_app(app, app_limiter):
             conditions.append("users.role = ?")
             parameters.append(filters["role"])
 
+        where_clause = (
+            f'WHERE {" AND ".join(conditions)}' if conditions else ""
+        )
         query = f"""
             SELECT users.first_name, users.last_name, users.email, users.role,
                    buildings.name AS building_name
             FROM users JOIN buildings ON buildings.id = users.building_id
-            WHERE {" AND ".join(conditions)}
+            {where_clause}
             ORDER BY users.last_name COLLATE NOCASE,
                      users.first_name COLLATE NOCASE,
                      users.id
@@ -243,7 +246,7 @@ def init_app(app, app_limiter):
     @admin_required
     def add_user():
         db = get_db()
-        values = _account_values()
+        values = _account_values(building_id=current_user.building_id)
         errors = {}
         if request.method == "POST":
             values = _account_values(request.form)

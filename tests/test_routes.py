@@ -344,6 +344,28 @@ def test_role_error_is_associated_with_role_select(client):
     assert b'id="role" name="role" aria-describedby="role-error"' in response.data
 
 
+def test_admin_add_user_locks_regional_centre(client):
+    admin_building_id = building_id(client.application, "Leeds")
+    add_user(
+        client.application, "admin@hmrc.gov.uk", "admin", building="Leeds"
+    )
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get("/add_user")
+
+    assert response.status_code == 200
+    assert b"Regional centre" in response.data
+    assert (
+        f'<input type="hidden" name="building_id" value="{admin_building_id}">'
+        .encode() in response.data
+    )
+    assert b'<select class="govuk-select" id="building_id" disabled>' in response.data
+    assert (
+        f'<option value="{admin_building_id}" selected>Leeds</option>'.encode()
+        in response.data
+    )
+
+
 def test_non_regional_location_is_not_offered_or_accepted(client):
     with client.application.app_context():
         db = get_db()
@@ -412,18 +434,18 @@ def test_login_post_is_throttled_but_get_is_not(tmp_path, monkeypatch):
     assert client.get("/login").status_code == 200
 
 
-def test_admin_user_list_is_building_scoped(client):
+def test_admin_user_list_has_organisation_wide_visibility(client):
     add_user(client.application, "admin@hmrc.gov.uk", "admin")
     add_user(client.application, "local@hmrc.gov.uk")
     add_user(client.application, "remote@hmrc.gov.uk", building="Leeds")
     login(client, "admin@hmrc.gov.uk")
     response = client.get("/admin/users")
     assert b"local@hmrc.gov.uk" in response.data
-    assert b"remote@hmrc.gov.uk" not in response.data
+    assert b"remote@hmrc.gov.uk" in response.data
     assert b"password_hash" not in response.data
     filtered = client.get("/admin/users", query_string={"first_name": "Test"})
     assert b"local@hmrc.gov.uk" in filtered.data
-    assert b"remote@hmrc.gov.uk" not in filtered.data
+    assert b"remote@hmrc.gov.uk" in filtered.data
 
 
 @pytest.mark.parametrize(
