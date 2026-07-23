@@ -58,15 +58,21 @@ def building_id(app, name="Birmingham"):
         ).fetchone()[0]
 
 
-def add_user(app, email, role="user", building="Birmingham", password="A distinct valid passphrase"):
+def add_user(
+    app, email, role="user", building="Birmingham",
+    password="A distinct valid passphrase", first_name="Test", last_name="Person",
+):
     with app.app_context():
         db = get_db()
         cursor = db.execute(
             """
             INSERT INTO users (email, password_hash, first_name, last_name, building_id, role)
-            SELECT ?, ?, 'Test', 'Person', id, ? FROM buildings WHERE name = ?
+            SELECT ?, ?, ?, ?, id, ? FROM buildings WHERE name = ?
             """,
-            (email.lower(), generate_password_hash(password), role, building),
+            (
+                email.lower(), generate_password_hash(password), first_name,
+                last_name, role, building,
+            ),
         )
         db.commit()
         return cursor.lastrowid
@@ -415,12 +421,208 @@ def test_admin_user_list_is_building_scoped(client):
     assert b"local@hmrc.gov.uk" in response.data
     assert b"remote@hmrc.gov.uk" not in response.data
     assert b"password_hash" not in response.data
+    filtered = client.get("/admin/users", query_string={"first_name": "Test"})
+    assert b"local@hmrc.gov.uk" in filtered.data
+    assert b"remote@hmrc.gov.uk" not in filtered.data
+
+
+@pytest.mark.parametrize(
+    ("parameter", "query", "email", "first_name", "last_name"),
+    [
+        ("first_name", "LEX", "first-match@hmrc.gov.uk", "Alexandra", "Target"),
+        ("last_name", "DONN", "last-match@hmrc.gov.uk", "Target", "McDonnell"),
+        ("email", "MATCH@HMRC", "email.match@hmrc.gov.uk", "Email", "Target"),
+    ],
+)
+def test_admin_user_text_search_is_case_insensitive_partial(
+    client, parameter, query, email, first_name, last_name,
+):
+    add_user(
+        client.application, "admin@hmrc.gov.uk", "admin",
+        first_name="Site", last_name="Administrator",
+    )
+    add_user(
+        client.application, email, first_name=first_name, last_name=last_name,
+    )
+    add_user(
+        client.application, "unrelated@hmrc.gov.uk",
+        first_name="Different", last_name="Person",
+    )
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get("/admin/users", query_string={parameter: query})
+
+    assert response.status_code == 200
+    assert email.encode() in response.data
+    assert b"unrelated@hmrc.gov.uk" not in response.data
+
+
+@pytest.mark.parametrize(
+    ("role", "shown_email", "hidden_email"),
+    [
+        ("user", "user@hmrc.gov.uk", "admin@hmrc.gov.uk"),
+        ("admin", "admin@hmrc.gov.uk", "user@hmrc.gov.uk"),
+    ],
+)
+def test_admin_user_search_filters_by_role(
+    client, role, shown_email, hidden_email,
+):
+    add_user(client.application, "admin@hmrc.gov.uk", "admin")
+    add_user(client.application, "user@hmrc.gov.uk")
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get("/admin/users", query_string={"role": role})
+
+    assert response.status_code == 200
+    assert shown_email.encode() in response.data
+    assert hidden_email.encode() not in response.data
+
+
+def test_admin_user_search_combines_filters(client):
+    add_user(
+        client.application, "admin@hmrc.gov.uk", "admin",
+        first_name="Site", last_name="Administrator",
+    )
+    add_user(
+        client.application, "matching.user@hmrc.gov.uk",
+        first_name="Alice", last_name="Jones",
+    )
+    add_user(
+        client.application, "matching.wrong-name@hmrc.gov.uk",
+        first_name="Alicia", last_name="Smith",
+    )
+    add_user(
+        client.application, "matching.admin@hmrc.gov.uk", "admin",
+        first_name="Alice", last_name="Jones",
+    )
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get(
+        "/admin/users",
+        query_string={
+            "first_name": "ali",
+            "last_name": "jones",
+            "email": "matching",
+            "role": "user",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"matching.user@hmrc.gov.uk" in response.data
+    assert b"matching.wrong-name@hmrc.gov.uk" not in response.data
+    assert b"matching.admin@hmrc.gov.uk" not in response.data
+
+
+@pytest.mark.parametrize(
+    ("field", "literal", "target_email", "target_names", "decoy_email", "decoy_names"),
+    [
+        (
+            "first_name", "%", "percent.literal@hmrc.gov.uk",
+            ("Perc%ent", "Target"), "percent.decoy@hmrc.gov.uk",
+            ("Percent", "Target"),
+        ),
+        (
+            "last_name", "_", "underscore.literal@hmrc.gov.uk",
+            ("Under", "Score_Name"), "underscore.decoy@hmrc.gov.uk",
+            ("Under", "ScoreName"),
+        ),
+        (
+            "first_name", "\\", "backslash.literal@hmrc.gov.uk",
+            ("Back\\Slash", "Target"), "backslash.decoy@hmrc.gov.uk",
+            ("BackSlash", "Target"),
+        ),
+    ],
+)
+def test_admin_user_search_treats_like_characters_literally(
+    client, field, literal, target_email, target_names, decoy_email, decoy_names,
+):
+    add_user(client.application, "admin@hmrc.gov.uk", "admin")
+    add_user(
+        client.application, target_email,
+        first_name=target_names[0], last_name=target_names[1],
+    )
+    add_user(
+        client.application, decoy_email,
+        first_name=decoy_names[0], last_name=decoy_names[1],
+    )
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get("/admin/users", query_string={field: literal})
+
+    assert response.status_code == 200
+    assert target_email.encode() in response.data
+    assert decoy_email.encode() not in response.data
+
+
+@pytest.mark.parametrize("role", ["manager", "ADMIN", "%"])
+def test_admin_user_search_rejects_unsupported_role(client, role):
+    add_user(client.application, "admin@hmrc.gov.uk", "admin")
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get("/admin/users", query_string={"role": role})
+
+    assert response.status_code == 400
+
+
+@pytest.mark.parametrize("field", ["first_name", "last_name", "email"])
+def test_admin_user_search_rejects_overlong_text_filter(client, field):
+    add_user(client.application, "admin@hmrc.gov.uk", "admin")
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get(
+        "/admin/users", query_string={field: f" {'x' * 101} "},
+    )
+
+    assert response.status_code == 400
+
+
+def test_admin_user_search_preserves_filters_and_renders_controls(client):
+    add_user(
+        client.application, "admin@hmrc.gov.uk", "admin",
+        first_name="Alice", last_name="Jones",
+    )
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get(
+        "/admin/users",
+        query_string={
+            "first_name": "  Alice  ",
+            "last_name": "  Jones  ",
+            "email": "  hmrc.gov  ",
+            "role": "  admin  ",
+        },
+    )
+    page = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="first_name" name="first_name" type="text" value="Alice"' in page
+    assert 'id="last_name" name="last_name" type="text" value="Jones"' in page
+    assert 'id="email" name="email" type="text" value="hmrc.gov"' in page
+    assert '<option value="admin" selected>Administrator</option>' in page
+    assert 'href="/admin/users">Clear filters</a>' in page
+    assert page.count('scope="col"') == 4
+
+
+def test_admin_user_search_no_matches_hides_table(client):
+    add_user(client.application, "admin@hmrc.gov.uk", "admin")
+    login(client, "admin@hmrc.gov.uk")
+
+    response = client.get(
+        "/admin/users", query_string={"first_name": "NoSuchPerson"},
+    )
+
+    assert response.status_code == 200
+    assert b"No users match your filters." in response.data
+    assert b"<table" not in response.data
 
 
 def test_regular_user_cannot_access_admin_routes(client):
     add_user(client.application, "user@hmrc.gov.uk")
     login(client, "user@hmrc.gov.uk")
-    for path in ("/admin/users", "/admin/domains", "/add_user"):
+    for path in (
+        "/admin/users", "/admin/users?first_name=Test",
+        "/admin/domains", "/add_user",
+    ):
         assert client.get(path).status_code == 403
 
 
