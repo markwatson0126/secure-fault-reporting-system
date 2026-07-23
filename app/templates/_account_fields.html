@@ -1,4 +1,4 @@
-{% macro fields(errors, values, buildings, include_role=false) %}
+{% macro fields(errors, values, buildings, include_role=false, building_label="Building or work location", lock_building=false) %}
 <div class="govuk-form-group{% if errors.get('email') %} govuk-form-group--error{% endif %}">
     <label class="govuk-label" for="email">Email address</label>
     {% if errors.get('email') %}<p id="email-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.email }}</p>{% endif %}
@@ -12,12 +12,20 @@
 </div>
 {% endfor %}
 <div class="govuk-form-group{% if errors.get('building_id') %} govuk-form-group--error{% endif %}">
-    <label class="govuk-label" for="building_id">Building or work location</label>
+    <label class="govuk-label" for="building_id">{{ building_label }}</label>
     {% if errors.get('building_id') %}<p id="building_id-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.building_id }}</p>{% endif %}
+    {% if lock_building %}
+    <input type="hidden" name="building_id" value="{{ values.building_id }}">
+    <select class="govuk-select{% if errors.get('building_id') %} govuk-select--error{% endif %}" id="building_id" disabled{% if errors.get('building_id') %} aria-describedby="building_id-error"{% endif %}>
+        <option value="">Select a regional centre</option>
+        {% for building in buildings %}<option value="{{ building.id }}"{% if values.building_id|string == building.id|string %} selected{% endif %}>{{ building.name }}</option>{% endfor %}
+    </select>
+    {% else %}
     <select class="govuk-select{% if errors.get('building_id') %} govuk-select--error{% endif %}" id="building_id" name="building_id"{% if errors.get('building_id') %} aria-describedby="building_id-error"{% endif %}>
         <option value="">Select a building or work location</option>
         {% for building in buildings %}<option value="{{ building.id }}"{% if values.building_id|string == building.id|string %} selected{% endif %}>{{ building.name }}</option>{% endfor %}
     </select>
+    {% endif %}
 </div>
 {% if include_role %}
 <div class="govuk-form-group{% if errors.get('role') %} govuk-form-group--error{% endif %}">

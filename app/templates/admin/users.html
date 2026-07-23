@@ -2,7 +2,7 @@
 {% block title %}Users{% endblock %}
 {% block content %}
 <h1 class="govuk-heading-xl">Users</h1>
-<p class="govuk-body">Users assigned to {{ current_user.building_name }}.</p>
+<p class="govuk-body">Administrators can view users across all buildings.</p>
 
 <h2 class="govuk-heading-m">Search users</h2>
 <form method="get" action="{{ url_for('admin_users') }}">
@@ -36,7 +36,7 @@
 
 {% if users %}
 <table class="govuk-table">
-    <caption class="govuk-table__caption govuk-table__caption--m">Building users</caption>
+    <caption class="govuk-table__caption govuk-table__caption--m">All users</caption>
     <thead class="govuk-table__head">
         <tr class="govuk-table__row">
             <th scope="col" class="govuk-table__header">Full name</th>
