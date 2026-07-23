@@ -70,6 +70,55 @@ INITIAL_ADMIN_BUILDING
 4. The tutor registers with their own email address.
 5. Open **Users** as the administrator to demonstrate building-scoped visibility.
 
+## Assessment database
+
+Generate a sanitised SQLite database containing only deterministic fictional assessment data:
+
+```powershell
+python scripts/create_assessment_db.py
+```
+
+The default output is:
+
+```text
+assessment_artifacts/secure_fault_reporting_assessment.db
+```
+
+The database contains these demonstration accounts:
+
+| Name | Regional centre | Role | Email address |
+|---|---|---|---|
+| Alex Morgan | Glasgow | Administrator | `alex.morgan@glasgow.example.com` |
+| Priya Shah | Glasgow | User | `priya.shah@glasgow.example.com` |
+| Jamie Brown | Glasgow | User | `jamie.brown@glasgow.example.com` |
+| Taylor Reid | Edinburgh | Administrator | `taylor.reid@edinburgh.example.com` |
+| Morgan Lee | Edinburgh | User | `morgan.lee@edinburgh.example.com` |
+| Sam Patel | Edinburgh | User | `sam.patel@edinburgh.example.com` |
+
+All six accounts use the assessment-only password:
+
+```text
+AssessmentDemo!2026
+```
+
+Choose another output location with `--output`. Generation refuses to overwrite an existing file unless `--force` is supplied:
+
+```powershell
+python scripts/create_assessment_db.py --output "C:\assessment\assessment.db"
+python scripts/create_assessment_db.py --force
+```
+
+The generated database contains no production data and must never replace `instance/app.db`. Database files are intentionally excluded from Git by the `*.db` ignore rule, so add the generated database separately to the assessment submission ZIP.
+
+To run the application against the assessment database, ensure the `INITIAL_ADMIN_*` environment variables are unset, set a temporary local secret, and pass the existing `DATABASE` configuration override:
+
+```powershell
+$env:SECRET_KEY = "assessment-demo-local-only"
+python -c "from pathlib import Path; from app import create_app; database = Path('assessment_artifacts/secure_fault_reporting_assessment.db').resolve(); app = create_app({'DATABASE': str(database)}); app.run()"
+```
+
+This override applies only to that process and leaves the normal `instance/app.db` path unchanged.
+
 ## Password policy
 
 Passwords must contain at least 12 characters. Spaces and ordinary Unicode characters are accepted; there are no uppercase, lowercase, number, symbol or artificial maximum-length rules. A small explicit list of common passwords, including `password`, `qwerty`, `welcome`, `admin`, `government` and `hmrc`, is rejected after case-folding and removing non-alphanumeric characters. The application also rejects simple repetition and a small set of obvious sequences; it does not attempt to detect every possible variation of a listed password. Passwords are never redisplayed or logged and are stored only as Werkzeug hashes.
