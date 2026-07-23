@@ -5,7 +5,7 @@ import pytest
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import create_app
-from app.db import BUILDINGS, FALLBACK_BUILDING, get_db
+from app.db import BUILDINGS, get_db
 
 
 class CSRFTokenParser(HTMLParser):
@@ -145,13 +145,23 @@ def test_schema_and_seed_are_idempotent(app):
         initialise_database()
         db = get_db()
         assert [row[0] for row in db.execute("SELECT name FROM buildings ORDER BY name")] == sorted(BUILDINGS)
-        assert db.execute("SELECT COUNT(*) FROM buildings").fetchone()[0] == 15
+        assert db.execute("SELECT COUNT(*) FROM buildings").fetchone()[0] == 14
         assert db.execute("SELECT COUNT(*) FROM allowed_email_domains").fetchone()[0] == 14
         assert db.execute("PRAGMA foreign_keys").fetchone()[0] == 1
         assert db.execute(
-            "SELECT COUNT(*) FROM allowed_email_domains d JOIN buildings b ON b.id=d.building_id WHERE b.name=?",
-            (FALLBACK_BUILDING,),
-        ).fetchone()[0] == 0
+            "SELECT COUNT(DISTINCT building_id) FROM allowed_email_domains "
+            "WHERE domain = 'hmrc.gov.uk' AND active = 1"
+        ).fetchone()[0] == 14
+        fault_columns = {
+            row["name"] for row in db.execute("PRAGMA table_info(faults)")
+        }
+        assert "building_id" in fault_columns
+        assert "location" not in fault_columns
+        fault_foreign_keys = {
+            (row["from"], row["table"], row["to"])
+            for row in db.execute("PRAGMA foreign_key_list(faults)")
+        }
+        assert ("building_id", "buildings", "id") in fault_foreign_keys
 
 
 def test_database_case_insensitive_uniqueness_and_constraints(app):
@@ -244,14 +254,12 @@ def test_registration_and_login_share_international_domain_normalisation(client)
     ).status_code == 302
 
 
-def test_inactive_domain_and_fallback_building_are_ineligible(client):
+def test_inactive_domain_is_ineligible(client):
     with client.application.app_context():
         db = get_db()
         db.execute("UPDATE allowed_email_domains SET active=0 WHERE domain='hmrc.gov.uk' AND building_id=?", (building_id(client.application),))
-        fallback = db.execute("SELECT id FROM buildings WHERE name=?", (FALLBACK_BUILDING,)).fetchone()[0]
         db.commit()
     assert register(client).status_code == 422
-    assert register(client, email="other@example.com", building_id=str(fallback)).status_code == 422
 
 
 def test_active_admin_added_domain_allows_registration(client):
@@ -307,6 +315,7 @@ def test_account_markup_and_secret_preservation(client):
     assert b'autocomplete="new-password"' in page and b'autocapitalize="none"' in page
     assert b"confirm_password" not in page
     assert b'<option value="">Select a building or work location</option>' in page
+    assert b"Other government or partner location" not in page
     secret = "This secret must never return"
     response = register(client, email="bad", first_name="Anne-Marie", password=secret)
     assert b"Anne-Marie" in response.data and secret.encode() not in response.data
@@ -327,6 +336,34 @@ def test_role_error_is_associated_with_role_select(client):
     response = client.post("/add_user", data=data)
     assert b'id="role-error"' in response.data
     assert b'id="role" name="role" aria-describedby="role-error"' in response.data
+
+
+def test_non_regional_location_is_not_offered_or_accepted(client):
+    with client.application.app_context():
+        db = get_db()
+        other_id = db.execute(
+            """
+            INSERT INTO buildings (name, active)
+            VALUES ('Other government or partner location', 1)
+            """
+        ).lastrowid
+        db.commit()
+
+    assert b"Other government or partner location" not in client.get(
+        "/register"
+    ).data
+
+    add_user(client.application, "reporter@hmrc.gov.uk")
+    login(client, "reporter@hmrc.gov.uk")
+    assert b"Other government or partner location" not in client.get("/").data
+    response = client.post("/submit", data={
+        "title": "Broken light",
+        "description": "The light is not working",
+        "building_id": str(other_id),
+        "csrf_token": csrf(client, "/"),
+    })
+    assert response.status_code == 400
+    assert b"Select a valid regional centre." in response.data
 
 
 def test_csrf_is_required(client):
@@ -448,13 +485,24 @@ def test_deactivating_domain_does_not_disable_existing_user(client):
 def test_fault_list_displays_name_not_email(client):
     user_id = add_user(client.application, "private@hmrc.gov.uk")
     with client.application.app_context():
-        db=get_db(); db.execute("INSERT INTO faults(title,description,location,status,submitted_by) VALUES('Leak','Pipe','Floor 1','Open',?)", (user_id,)); db.commit()
+        db = get_db()
+        db.execute(
+            """
+            INSERT INTO faults
+                (title, description, building_id, status, submitted_by)
+            VALUES ('Leak', 'Pipe', ?, 'Open', ?)
+            """,
+            (building_id(client.application), user_id),
+        )
+        db.commit()
     login(client, "private@hmrc.gov.uk")
     response = client.get("/")
-    assert b"Test Person" in response.data and b"private@hmrc.gov.uk" not in response.data
+    assert b"Test Person" in response.data
+    assert b"Birmingham" in response.data
+    assert b"private@hmrc.gov.uk" not in response.data
 
 
-def test_fault_form_uses_required_browser_validation(client):
+def test_fault_form_uses_required_regional_centre_select(client):
     add_user(client.application, "reporter@hmrc.gov.uk")
     login(client, "reporter@hmrc.gov.uk")
     response = client.get("/")
@@ -464,7 +512,66 @@ def test_fault_form_uses_required_browser_validation(client):
     assert b"novalidate" not in fault_form
     assert b'id="title" name="title" type="text" required' in fault_form
     assert b'id="description" name="description" rows="5" required' in fault_form
-    assert b'id="location" name="location" type="text" required' in fault_form
+    assert b'id="building_id" name="building_id" required' in fault_form
+    selected = (
+        f'value="{building_id(client.application)}" selected>Birmingham</option>'
+    ).encode()
+    assert selected in fault_form
+    assert all(name.encode() in fault_form for name in BUILDINGS)
+    assert b"Other government or partner location" not in fault_form
+
+
+def test_fault_can_be_reported_for_another_active_regional_centre(client):
+    add_user(client.application, "reporter@hmrc.gov.uk")
+    login(client, "reporter@hmrc.gov.uk")
+    leeds_id = building_id(client.application, "Leeds")
+    response = client.post("/submit", data={
+        "title": "Broken light",
+        "description": "The light is not working",
+        "building_id": str(leeds_id),
+        "csrf_token": csrf(client, "/"),
+    })
+    assert response.status_code == 302
+    with client.application.app_context():
+        fault = get_db().execute(
+            "SELECT building_id FROM faults WHERE title = 'Broken light'"
+        ).fetchone()
+        assert fault["building_id"] == leeds_id
+    assert b"Leeds" in client.get("/").data
+
+
+@pytest.mark.parametrize("selected_building", ["", "not-an-id", "999999"])
+def test_fault_rejects_invalid_regional_centre(client, selected_building):
+    add_user(client.application, "reporter@hmrc.gov.uk")
+    login(client, "reporter@hmrc.gov.uk")
+    response = client.post("/submit", data={
+        "title": "Broken light",
+        "description": "The light is not working",
+        "building_id": selected_building,
+        "csrf_token": csrf(client, "/"),
+    })
+    assert response.status_code == 400
+    assert b"Select a valid regional centre." in response.data
+    with client.application.app_context():
+        assert get_db().execute("SELECT COUNT(*) FROM faults").fetchone()[0] == 0
+
+
+def test_fault_rejects_inactive_regional_centre(client):
+    add_user(client.application, "reporter@hmrc.gov.uk")
+    login(client, "reporter@hmrc.gov.uk")
+    leeds_id = building_id(client.application, "Leeds")
+    with client.application.app_context():
+        db = get_db()
+        db.execute("UPDATE buildings SET active = 0 WHERE id = ?", (leeds_id,))
+        db.commit()
+    response = client.post("/submit", data={
+        "title": "Broken light",
+        "description": "The light is not working",
+        "building_id": str(leeds_id),
+        "csrf_token": csrf(client, "/"),
+    })
+    assert response.status_code == 400
+    assert b"Select a valid regional centre." in response.data
 
 
 def test_govuk_assets_load(client):

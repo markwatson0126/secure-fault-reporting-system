@@ -34,12 +34,13 @@ CREATE TABLE IF NOT EXISTS faults (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    location TEXT NOT NULL,
+    building_id INTEGER NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('Open', 'Closed')),
     submitted_by INTEGER NOT NULL,
     closed_by INTEGER,
     date_created TEXT DEFAULT CURRENT_TIMESTAMP,
     date_closed TEXT,
+    FOREIGN KEY (building_id) REFERENCES buildings(id),
     FOREIGN KEY (submitted_by) REFERENCES users(id),
     FOREIGN KEY (closed_by) REFERENCES users(id)
 );

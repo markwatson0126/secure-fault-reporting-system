@@ -12,10 +12,8 @@ from .validation import validate_email_address, validate_name, validate_password
 BUILDINGS = (
     "Belfast", "Birmingham", "Bristol", "Cardiff", "Croydon", "Edinburgh",
     "Glasgow", "Leeds", "Liverpool", "Manchester", "Newcastle", "Nottingham",
-    "Portsmouth", "Stratford", "Other government or partner location",
+    "Portsmouth", "Stratford",
 )
-HMRC_BUILDINGS = BUILDINGS[:-1]
-FALLBACK_BUILDING = BUILDINGS[-1]
 
 
 def get_db():
@@ -59,81 +57,12 @@ def seed_reference_data(db):
             (building_id, domain, active, created_by_user_id)
         SELECT id, 'hmrc.gov.uk', 1, NULL FROM buildings WHERE name = ? COLLATE NOCASE
         """,
-        ((name,) for name in HMRC_BUILDINGS),
+        ((name,) for name in BUILDINGS),
     )
-
-
-def _legacy_email(user_id, username, used):
-    email, error = validate_email_address(username)
-    if error or email in used:
-        email = f"legacy-{user_id}@migration-placeholder.internal"
-        suffix = 1
-        while email in used:
-            suffix += 1
-            email = f"legacy-{user_id}-{suffix}@migration-placeholder.internal"
-    used.add(email)
-    return email
-
-
-def migrate_legacy_database(db):
-    columns = {row["name"] for row in db.execute("PRAGMA table_info(users)")}
-    if not columns or "username" not in columns:
-        return
-
-    fallback_id = db.execute(
-        "SELECT id FROM buildings WHERE name = ? COLLATE NOCASE", (FALLBACK_BUILDING,)
-    ).fetchone()["id"]
-    users = db.execute("SELECT * FROM users ORDER BY id").fetchall()
-    faults = db.execute("SELECT * FROM faults ORDER BY id").fetchall()
-
-    db.commit()
-    db.execute("PRAGMA foreign_keys = OFF")
-    try:
-        db.execute("BEGIN IMMEDIATE")
-        db.execute("ALTER TABLE users RENAME TO users_legacy")
-        db.execute("ALTER TABLE faults RENAME TO faults_legacy")
-        _apply_schema(db)
-        used = set()
-        for user in users:
-            db.execute(
-                """
-                INSERT INTO users
-                    (id, email, password_hash, first_name, last_name, building_id, role)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    user["id"], _legacy_email(user["id"], user["username"], used),
-                    user["password_hash"], user["first_name"], user["last_name"],
-                    fallback_id, user["role"],
-                ),
-            )
-        for fault in faults:
-            db.execute(
-                """
-                INSERT INTO faults
-                    (id, title, description, location, status, submitted_by,
-                     closed_by, date_created, date_closed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                tuple(fault),
-            )
-        db.execute("DROP TABLE faults_legacy")
-        db.execute("DROP TABLE users_legacy")
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.execute("PRAGMA foreign_keys = ON")
 
 
 def initialise_database():
     db = get_db()
-    db.execute("CREATE TABLE IF NOT EXISTS buildings (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL COLLATE NOCASE UNIQUE, active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)))")
-    seed_buildings(db)
-    db.commit()
-    # Domains depend on users, so legacy users must be migrated before seeding domains.
-    migrate_legacy_database(db)
     _apply_schema(db)
     seed_reference_data(db)
     _create_initial_admin(db)
@@ -146,8 +75,14 @@ def initialise_database():
 
 def active_buildings(db=None):
     database = db or get_db()
+    placeholders = ", ".join("?" for _ in BUILDINGS)
     return database.execute(
-        "SELECT id, name FROM buildings WHERE active = 1 ORDER BY name COLLATE NOCASE"
+        f"""
+        SELECT id, name FROM buildings
+        WHERE active = 1 AND name COLLATE NOCASE IN ({placeholders})
+        ORDER BY name COLLATE NOCASE
+        """,
+        BUILDINGS,
     ).fetchall()
 
 
@@ -157,8 +92,14 @@ def find_active_building(value, db=None):
         building_id = int(value)
     except (TypeError, ValueError):
         return None
+    placeholders = ", ".join("?" for _ in BUILDINGS)
     return database.execute(
-        "SELECT id, name FROM buildings WHERE id = ? AND active = 1", (building_id,)
+        f"""
+        SELECT id, name FROM buildings
+        WHERE id = ? AND active = 1
+          AND name COLLATE NOCASE IN ({placeholders})
+        """,
+        (building_id, *BUILDINGS),
     ).fetchone()
 
 
