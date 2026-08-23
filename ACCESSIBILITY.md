@@ -59,14 +59,14 @@ A keyboard-only retest of the tabbed faults page was completed after the redesig
 
 WAVE was repeated after the final navigation and tab changes. The current standard-user faults page returned zero errors, zero contrast errors and zero alerts, with an AIM score of 10 out of 10. This improves on the earlier result by removing the redundant-link alert. The result is treated as evidence that no automatically detectable WAVE issues were present on the tested page, not as proof of full accessibility or WCAG conformance.
 
+The Web Developer document outline was also repeated after the tab redesign. The final structure contains one H1 (`Faults`), H2 headings for the tab group and the three task areas (`Fault options`, `Active faults`, `Report a fault`, `Closed faults`), and H3 headings for individual active and closed faults. No heading levels are skipped and individual fault headings are correctly nested beneath their relevant fault-status section. The `Fault options` heading is part of the GOV.UK Tabs component and labels the group of tab choices.
+
 ## Manual testing still to perform
 
 Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
 - test the fault form with validation errors and confirm that the reporting tab remains visible and the error summary receives focus when GOV.UK Frontend JavaScript is active
 - zoom browser content to 200% and 400% and check for loss of content or horizontal scrolling where avoidable
-- re-check headings and landmarks after the tab change
-- use Web Developer to inspect document structure
 - use a colour contrast analyser for custom colours
 - where practical, test core journeys with a screen reader
 
