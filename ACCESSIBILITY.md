@@ -55,13 +55,13 @@ The Web Developer document outline and keyboard navigation were then used to rev
 
 Static fault information has deliberately not been added to the tab order because ordinary text should not become an unnecessary keyboard stop. Instead, faults retain semantic headings and summary-list markup, while keyboard focus is reserved for interactive controls. The page now uses the GOV.UK Tabs component so users can switch between active faults, reporting and closed faults without showing all three sections at once.
 
+A keyboard-only retest of the tabbed faults page was completed after the redesign. Focus was visibly indicated, the active tab could be changed with the Left and Right Arrow keys, Tab moved into the currently displayed panel, the `Report a fault` controls followed a logical order (Title, Description, Regional centre, Submit fault), hidden tab panels did not enter the tab sequence, and no keyboard trap was observed.
+
 ## Manual testing still to perform
 
 Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
 - repeat WAVE after the navigation and tab changes
-- complete the tabbed faults journey using only the keyboard
-- confirm that tab focus is visible and that the active tab can be changed without trapping focus
 - test the fault form with validation errors and confirm that the reporting tab remains visible and the error summary receives focus when GOV.UK Frontend JavaScript is active
 - zoom browser content to 200% and 400% and check for loss of content or horizontal scrolling where avoidable
 - re-check headings and landmarks after the tab change
