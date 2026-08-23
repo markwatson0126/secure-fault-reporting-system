@@ -103,14 +103,15 @@ def add_fault(app, title="Broken light"):
         return cursor.lastrowid
 
 
-def test_primary_fault_form_is_visible_and_not_hidden_in_details(client):
+def test_primary_fault_form_is_available_in_tabs_not_details(client):
     add_user(client.application, "reporter@hmrc.gov.uk")
     login(client, "reporter@hmrc.gov.uk")
 
     page = client.get("/").get_data(as_text=True)
 
     assert "<details" not in page
-    assert "Report a fault" in page
+    assert 'class="govuk-tabs" data-module="govuk-tabs"' in page
+    assert 'href="#report-a-fault">Report a fault</a>' in page
     assert 'action="/submit"' in page
     assert 'id="title-hint"' in page
     assert 'id="description-hint"' in page
@@ -136,6 +137,9 @@ def test_fault_validation_has_error_summary_associations_and_preserves_input(cli
     assert 'aria-describedby="building_id-error"' in page
     assert 'value="Broken lift"' in page
     assert "Doors will not open" in page
+    assert 'govuk-tabs__list-item govuk-tabs__list-item--selected' in page
+    assert '<div class="govuk-tabs__panel" id="report-a-fault">' in page
+    assert '<div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="active-faults">' in page
 
 
 def test_successful_fault_report_displays_confirmation(client):
@@ -222,7 +226,7 @@ def test_accessibility_page_is_transparent_about_limits(client):
     assert b"usability testing with disabled users" in response.data
 
 
-def test_fault_page_has_on_page_navigation_and_logical_heading_order(client):
+def test_fault_page_uses_tabs_with_active_faults_selected_by_default(client):
     add_user(client.application, "reporter@hmrc.gov.uk")
     login(client, "reporter@hmrc.gov.uk")
     add_fault(client.application, "Active lighting fault")
@@ -245,13 +249,18 @@ def test_fault_page_has_on_page_navigation_and_logical_heading_order(client):
     page = client.get("/").get_data(as_text=True)
 
     assert '<h1 class="govuk-heading-xl">Faults</h1>' in page
-    assert 'aria-label="On this page"' in page
+    assert 'class="govuk-tabs" data-module="govuk-tabs"' in page
+    assert '<h2 class="govuk-tabs__title">Fault options</h2>' in page
+    assert 'govuk-tabs__list-item govuk-tabs__list-item--selected' in page
     assert 'href="#active-faults">Active faults</a>' in page
     assert 'href="#report-a-fault">Report a fault</a>' in page
     assert 'href="#closed-faults">Closed faults</a>' in page
-    assert '<h2 class="govuk-heading-l" id="active-faults">Active faults</h2>' in page
-    assert '<h2 class="govuk-heading-l" id="report-a-fault">Report a fault</h2>' in page
-    assert '<h2 class="govuk-heading-l" id="closed-faults">Closed faults</h2>' in page
+    assert '<div class="govuk-tabs__panel" id="active-faults">' in page
+    assert '<div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="report-a-fault">' in page
+    assert '<div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="closed-faults">' in page
+    assert '<h2 class="govuk-heading-l">Active faults</h2>' in page
+    assert '<h2 class="govuk-heading-l">Report a fault</h2>' in page
+    assert '<h2 class="govuk-heading-l">Closed faults</h2>' in page
     assert '>Active lighting fault</h3>' in page
     assert '>Resolved heating fault</h3>' in page
 
