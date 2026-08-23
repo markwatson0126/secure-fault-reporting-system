@@ -33,8 +33,8 @@
     <nav class="app-account-bar" aria-label="Account and administration">
         <div class="govuk-width-container">
             <span class="govuk-body-s">Signed in as <strong>{{ current_user.first_name }} {{ current_user.last_name }}</strong></span>
-            <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('index') }}">Faults</a>
             {% if current_user.role == 'admin' %}
+            <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('index') }}">Faults</a>
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_users') }}">Users</a>
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_domains') }}">Email domains</a>
             {% endif %}
