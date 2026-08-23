@@ -43,18 +43,22 @@
 <h1 class="govuk-heading-xl">Faults</h1>
 <p class="govuk-body">Check active faults before reporting a new problem to help avoid duplicate reports.</p>
 
-<nav aria-label="On this page" class="govuk-!-margin-bottom-7">
-    <p class="govuk-heading-s govuk-!-margin-bottom-2">On this page</p>
-    <ul class="govuk-list">
-        <li><a class="govuk-link" href="#active-faults">Active faults</a></li>
-        <li><a class="govuk-link" href="#report-a-fault">Report a fault</a></li>
-        <li><a class="govuk-link" href="#closed-faults">Closed faults</a></li>
+<div class="govuk-tabs" data-module="govuk-tabs">
+    <h2 class="govuk-tabs__title">Fault options</h2>
+    <ul class="govuk-tabs__list">
+        <li class="govuk-tabs__list-item{% if not errors %} govuk-tabs__list-item--selected{% endif %}">
+            <a class="govuk-tabs__tab" href="#active-faults">Active faults</a>
+        </li>
+        <li class="govuk-tabs__list-item{% if errors %} govuk-tabs__list-item--selected{% endif %}">
+            <a class="govuk-tabs__tab" href="#report-a-fault">Report a fault</a>
+        </li>
+        <li class="govuk-tabs__list-item">
+            <a class="govuk-tabs__tab" href="#closed-faults">Closed faults</a>
+        </li>
     </ul>
-</nav>
 
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l" id="active-faults">Active faults</h2>
+    <div class="govuk-tabs__panel{% if errors %} govuk-tabs__panel--hidden{% endif %}" id="active-faults">
+        <h2 class="govuk-heading-l">Active faults</h2>
         {% if active_faults %}
             {% for fault in active_faults %}
                 {{ fault_card(fault) }}
@@ -63,48 +67,48 @@
         <p class="govuk-body">There are no active faults.</p>
         {% endif %}
     </div>
-</div>
 
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l" id="report-a-fault">Report a fault</h2>
-        <p class="govuk-body">All fields are required.</p>
-        <form method="post" action="{{ url_for('submit_fault') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="govuk-tabs__panel{% if not errors %} govuk-tabs__panel--hidden{% endif %}" id="report-a-fault">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h2 class="govuk-heading-l">Report a fault</h2>
+                <p class="govuk-body">All fields are required.</p>
+                <form method="post" action="{{ url_for('submit_fault') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="govuk-form-group{% if errors.get('title') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="title">Title</label>
-                <div id="title-hint" class="govuk-hint">Use a short description, for example Broken light in meeting room 2.</div>
-                {% if errors.get('title') %}<p id="title-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.title }}</p>{% endif %}
-                <input class="govuk-input{% if errors.get('title') %} govuk-input--error{% endif %}" id="title" name="title" type="text" required value="{{ values.title }}" aria-describedby="title-hint{% if errors.get('title') %} title-error{% endif %}">
+                    <div class="govuk-form-group{% if errors.get('title') %} govuk-form-group--error{% endif %}">
+                        <label class="govuk-label" for="title">Title</label>
+                        <div id="title-hint" class="govuk-hint">Use a short description, for example Broken light in meeting room 2.</div>
+                        {% if errors.get('title') %}<p id="title-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.title }}</p>{% endif %}
+                        <input class="govuk-input{% if errors.get('title') %} govuk-input--error{% endif %}" id="title" name="title" type="text" required value="{{ values.title }}" aria-describedby="title-hint{% if errors.get('title') %} title-error{% endif %}">
+                    </div>
+
+                    <div class="govuk-form-group{% if errors.get('description') %} govuk-form-group--error{% endif %}">
+                        <label class="govuk-label" for="description">Description</label>
+                        <div id="description-hint" class="govuk-hint">Describe what is wrong and where the problem can be found.</div>
+                        {% if errors.get('description') %}<p id="description-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.description }}</p>{% endif %}
+                        <textarea class="govuk-textarea{% if errors.get('description') %} govuk-textarea--error{% endif %}" id="description" name="description" rows="5" required aria-describedby="description-hint{% if errors.get('description') %} description-error{% endif %}">{{ values.description }}</textarea>
+                    </div>
+
+                    <div class="govuk-form-group{% if errors.get('building_id') %} govuk-form-group--error{% endif %}">
+                        <label class="govuk-label" for="building_id">Regional centre</label>
+                        {% if errors.get('building_id') %}<p id="building_id-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.building_id }}</p>{% endif %}
+                        <select class="govuk-select{% if errors.get('building_id') %} govuk-select--error{% endif %}" id="building_id" name="building_id" required{% if errors.get('building_id') %} aria-describedby="building_id-error"{% endif %}>
+                            <option value="">Select a regional centre</option>
+                            {% for building in buildings %}
+                            <option value="{{ building.id }}"{% if values.building_id|string == building.id|string %} selected{% endif %}>{{ building.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button class="govuk-button" data-module="govuk-button" type="submit">Submit fault</button>
+                </form>
             </div>
-
-            <div class="govuk-form-group{% if errors.get('description') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="description">Description</label>
-                <div id="description-hint" class="govuk-hint">Describe what is wrong and where the problem can be found.</div>
-                {% if errors.get('description') %}<p id="description-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.description }}</p>{% endif %}
-                <textarea class="govuk-textarea{% if errors.get('description') %} govuk-textarea--error{% endif %}" id="description" name="description" rows="5" required aria-describedby="description-hint{% if errors.get('description') %} description-error{% endif %}">{{ values.description }}</textarea>
-            </div>
-
-            <div class="govuk-form-group{% if errors.get('building_id') %} govuk-form-group--error{% endif %}">
-                <label class="govuk-label" for="building_id">Regional centre</label>
-                {% if errors.get('building_id') %}<p id="building_id-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.building_id }}</p>{% endif %}
-                <select class="govuk-select{% if errors.get('building_id') %} govuk-select--error{% endif %}" id="building_id" name="building_id" required{% if errors.get('building_id') %} aria-describedby="building_id-error"{% endif %}>
-                    <option value="">Select a regional centre</option>
-                    {% for building in buildings %}
-                    <option value="{{ building.id }}"{% if values.building_id|string == building.id|string %} selected{% endif %}>{{ building.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <button class="govuk-button" data-module="govuk-button" type="submit">Submit fault</button>
-        </form>
+        </div>
     </div>
-</div>
 
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l" id="closed-faults">Closed faults</h2>
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="closed-faults">
+        <h2 class="govuk-heading-l">Closed faults</h2>
         {% if closed_faults %}
             {% for fault in closed_faults %}
                 {{ fault_card(fault) }}
