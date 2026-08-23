@@ -25,21 +25,6 @@
 {% set active_faults = faults | rejectattr('status', 'equalto', 'Closed') | list %}
 {% set closed_faults = faults | selectattr('status', 'equalto', 'Closed') | list %}
 
-{% if errors %}
-<div class="govuk-error-summary" data-module="govuk-error-summary">
-    <div role="alert">
-        <h2 class="govuk-error-summary__title">There is a problem</h2>
-        <div class="govuk-error-summary__body">
-            <ul class="govuk-list govuk-error-summary__list">
-                {% for field, message in errors.items() %}
-                <li><a href="#{{ field }}">{{ message }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <h1 class="govuk-heading-xl">Faults</h1>
 <p class="govuk-body">Check active faults before reporting a new problem to help avoid duplicate reports.</p>
 
@@ -69,6 +54,21 @@
     </div>
 
     <div class="govuk-tabs__panel{% if not errors %} govuk-tabs__panel--hidden{% endif %}" id="report-a-fault">
+        {% if errors %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary">
+            <div role="alert">
+                <h2 class="govuk-error-summary__title">There is a problem</h2>
+                <div class="govuk-error-summary__body">
+                    <ul class="govuk-list govuk-error-summary__list">
+                        {% for field, message in errors.items() %}
+                        <li><a href="#{{ field }}">{{ message }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
                 <h2 class="govuk-heading-l">Report a fault</h2>
