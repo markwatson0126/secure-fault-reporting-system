@@ -73,7 +73,7 @@
             <div class="govuk-grid-column-two-thirds">
                 <h2 class="govuk-heading-l">Report a fault</h2>
                 <p class="govuk-body">All fields are required.</p>
-                <form method="post" action="{{ url_for('submit_fault') }}#report-a-fault">
+                <form method="post" action="{{ url_for('submit_fault') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="govuk-form-group{% if errors.get('title') %} govuk-form-group--error{% endif %}">
@@ -101,7 +101,7 @@
                         </select>
                     </div>
 
-                    <button class="govuk-button" data-module="govuk-button" type="submit">Submit fault</button>
+                    <button class="govuk-button" data-module="govuk-button" type="submit" formaction="{{ url_for('submit_fault') }}#report-a-fault">Submit fault</button>
                 </form>
             </div>
         </div>

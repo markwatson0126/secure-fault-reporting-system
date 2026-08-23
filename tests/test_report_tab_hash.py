@@ -1,10 +1,11 @@
 from pathlib import Path
 
 
-def test_fault_form_action_preserves_report_tab_fragment():
+def test_fault_submit_button_preserves_report_tab_fragment():
     template = Path("app/templates/index.html").read_text(encoding="utf-8")
 
-    assert 'action="{{ url_for(\'submit_fault\') }}#report-a-fault"' in template
+    assert 'action="{{ url_for(\'submit_fault\') }}"' in template
+    assert 'formaction="{{ url_for(\'submit_fault\') }}#report-a-fault"' in template
 
 
 def test_validation_summary_is_inside_report_panel():
