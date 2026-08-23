@@ -34,12 +34,15 @@ def app(tmp_path, monkeypatch):
         "INITIAL_ADMIN_LAST_NAME", "INITIAL_ADMIN_BUILDING",
     ):
         monkeypatch.delenv(name, raising=False)
-    return create_app({
+    app = create_app({
         "TESTING": True,
         "SECRET_KEY": "accessibility-test-secret",
         "DATABASE": str(tmp_path / "accessibility.db"),
         "RATELIMIT_ENABLED": False,
     })
+    with app.test_client() as test_client:
+        test_client.get("/login")
+    return app
 
 
 @pytest.fixture
