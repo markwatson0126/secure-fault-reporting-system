@@ -112,7 +112,7 @@ def test_primary_fault_form_is_available_in_tabs_not_details(client):
     assert "<details" not in page
     assert 'class="govuk-tabs" data-module="govuk-tabs"' in page
     assert 'href="#report-a-fault">Report a fault</a>' in page
-    assert 'action="/submit"' in page
+    assert 'action="/submit#report-a-fault"' in page
     assert 'id="title-hint"' in page
     assert 'id="description-hint"' in page
 
@@ -164,6 +164,8 @@ def test_fault_actions_have_context_and_confirmation_pages(client):
     fault_id = add_fault(client.application)
 
     page = client.get("/").get_data(as_text=True)
+    assert '<section class="app-fault">' in page
+    assert 'aria-labelledby="fault-' not in page
     assert "Mark as closed<span class=\"govuk-visually-hidden\">: Broken light</span>" in page
     assert "Delete fault<span class=\"govuk-visually-hidden\">: Broken light</span>" in page
 
