@@ -69,12 +69,13 @@ Validation testing identified a further interaction issue. Adding the `#report-a
 
 Colour contrast was reviewed using WAVE's Contrast panel on the validation-error state. WAVE reported no contrast errors on the page. The red validation text was identified as `#CA3535` against a white `#FFFFFF` background, giving a contrast ratio of 5.15:1. WAVE reported this as a pass for WCAG AA for normal-sized text and a fail for AAA. The result is recorded as evidence that the tested validation text meets the AA contrast threshold, not as a complete manual contrast audit of every possible interface state.
 
+A basic screen-reader test was completed using Windows Narrator on the Active faults journey. The initial implementation exposed every individual fault card as a named region, so Narrator announced the fault title followed by `region` before later announcing the contextual `Mark as closed` action for the same fault. This was judged unnecessarily verbose. The named region labelling was removed while retaining the H3 fault heading, structured description-list content and contextual action text. A retest confirmed that the redundant `region` announcement was removed, while users could still navigate to a fault heading and read its description, regional centre and submission information using scan-mode navigation. The contextual action remained distinguishable, for example `Mark as closed: Water cooler not dispensing`.
+
 ## Manual testing still to perform
 
-Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
+The remaining optional assisted check is:
 
-- complete the Accessibility Insights for Web FastPass tab-stop check
-- where practical, test a core journey with a screen reader
+- complete the Accessibility Insights for Web FastPass tab-stop check if additional evidence is required
 
 ## Limits of the evidence
 
