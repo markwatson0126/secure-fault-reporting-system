@@ -2,7 +2,7 @@
 {% block title %}{% if errors %}Error: {% endif %}Faults{% endblock %}
 {% block content %}
 {% macro fault_card(fault) -%}
-<section class="app-fault" aria-labelledby="fault-{{ fault.id }}">
+<section class="app-fault">
     <h3 class="govuk-heading-m" id="fault-{{ fault.id }}">{{ fault.title }}</h3>
     <strong class="govuk-tag{% if fault.status == 'Closed' %} govuk-tag--green{% else %} govuk-tag--yellow{% endif %}">{{ fault.status }}</strong>
     <dl class="govuk-summary-list govuk-!-margin-top-4">
