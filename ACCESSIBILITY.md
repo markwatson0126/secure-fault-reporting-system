@@ -63,11 +63,13 @@ The Web Developer document outline was also repeated after the tab redesign. The
 
 Browser zoom and reflow were tested at 200% and 400%. No text or controls were clipped, no content was lost, and no horizontal scrollbar appeared. At 400% zoom, the GOV.UK Tabs component changed to its small-screen behaviour and displayed the three sections sequentially on one page rather than as horizontal tabs. This was accepted as appropriate responsive behaviour because all content remained readable and operable without two-dimensional scrolling.
 
+Validation testing identified a further interaction issue. Adding the `#report-a-fault` fragment kept the reporting tab selected after a validation error, but the browser scrolled to the start of the tab panel while the error summary remained above it and therefore outside the viewport. The error summary has now been moved to the start of the `Report a fault` panel so the selected panel, error information and erroneous fields remain together. This change requires a final manual retest before the validation journey is recorded as passed.
+
 ## Manual testing still to perform
 
 Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
-- test the fault form with validation errors and confirm that the reporting tab remains visible and the error summary receives focus when GOV.UK Frontend JavaScript is active
+- retest the fault form with validation errors and confirm that the reporting tab remains visible and the error summary is visible and receives focus when GOV.UK Frontend JavaScript is active
 - use a colour contrast analyser for custom colours
 - where practical, test core journeys with a screen reader
 
