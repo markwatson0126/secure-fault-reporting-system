@@ -18,7 +18,7 @@ The existing application already included several useful accessibility foundatio
 
 The review also identified areas for improvement:
 
-- the fault-reporting form was hidden inside a disclosure even though reporting a fault is a core task
+- the fault-reporting form was hidden inside a `details` disclosure even though reporting a fault is a core task
 - fault-reporting validation returned plain HTTP error text instead of accessible, contextual form errors
 - fault actions had repeated names such as `Mark as closed` and `Delete fault` without additional context for assistive technology
 - closing and deleting faults did not provide an accessible confirmation step
@@ -47,7 +47,7 @@ The accessibility improvement branch makes the following changes:
 11. A transparent in-service accessibility and testing page records the current approach and limitations.
 12. Automated tests cover selected accessibility-related structure and behaviour and therefore run as part of the existing pytest continuous-integration step.
 
-## Manual testing completed so far
+## Manual testing completed
 
 WAVE was used on the standard-user faults page. The initial revised page returned zero errors and zero contrast errors, with one redundant-link alert. Manual review identified that the `Faults` navigation link was unnecessary for a standard user because the service title already returned to the only available functional page. The link was therefore removed for standard users while retained for administrators.
 
@@ -55,7 +55,7 @@ The Web Developer document outline and keyboard navigation were then used to rev
 
 Static fault information has deliberately not been added to the tab order because ordinary text should not become an unnecessary keyboard stop. Instead, faults retain semantic headings and summary-list markup, while keyboard focus is reserved for interactive controls. The page now uses the GOV.UK Tabs component so users can switch between active faults, reporting and closed faults without showing all three sections at once.
 
-A keyboard-only retest of the tabbed faults page was completed after the redesign. Focus was visibly indicated, the active tab could be changed with the Left and Right Arrow keys, Tab moved into the currently displayed panel, the `Report a fault` controls followed a logical order (Title, Description, Regional centre, Submit fault), hidden tab panels did not enter the tab sequence, and no keyboard trap was observed.
+A keyboard-only retest of the tabbed faults page was completed after the redesign. Focus was visibly indicated, the active tab could be changed with the Left and Right Arrow keys, Tab moved into the currently displayed panel, the `Report a fault` controls followed a logical order (Title, Description, Regional centre, Submit fault), hidden tab panels did not enter the tab sequence, and no keyboard trap was observed. Because this already provided a direct manual check of focus order and hidden-tab behaviour, a separate Accessibility Insights FastPass tab-stop exercise was not repeated solely to duplicate the same evidence.
 
 WAVE was repeated after the final navigation and tab changes. The current standard-user faults page returned zero errors, zero contrast errors and zero alerts, with an AIM score of 10 out of 10. This improves on the earlier result by removing the redundant-link alert. The result is treated as evidence that no automatically detectable WAVE issues were present on the tested page, not as proof of full accessibility or WCAG conformance.
 
@@ -70,12 +70,6 @@ Validation testing identified a further interaction issue. Adding the `#report-a
 Colour contrast was reviewed using WAVE's Contrast panel on the validation-error state. WAVE reported no contrast errors on the page. The red validation text was identified as `#CA3535` against a white `#FFFFFF` background, giving a contrast ratio of 5.15:1. WAVE reported this as a pass for WCAG AA for normal-sized text and a fail for AAA. The result is recorded as evidence that the tested validation text meets the AA contrast threshold, not as a complete manual contrast audit of every possible interface state.
 
 A basic screen-reader test was completed using Windows Narrator on the Active faults journey. The initial implementation exposed every individual fault card as a named region, so Narrator announced the fault title followed by `region` before later announcing the contextual `Mark as closed` action for the same fault. This was judged unnecessarily verbose. The named region labelling was removed while retaining the H3 fault heading, structured description-list content and contextual action text. A retest confirmed that the redundant `region` announcement was removed, while users could still navigate to a fault heading and read its description, regional centre and submission information using scan-mode navigation. The contextual action remained distinguishable, for example `Mark as closed: Water cooler not dispensing`.
-
-## Manual testing still to perform
-
-The remaining optional assisted check is:
-
-- complete the Accessibility Insights for Web FastPass tab-stop check if additional evidence is required
 
 ## Limits of the evidence
 
