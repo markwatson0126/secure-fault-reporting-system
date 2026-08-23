@@ -61,12 +61,13 @@ WAVE was repeated after the final navigation and tab changes. The current standa
 
 The Web Developer document outline was also repeated after the tab redesign. The final structure contains one H1 (`Faults`), H2 headings for the tab group and the three task areas (`Fault options`, `Active faults`, `Report a fault`, `Closed faults`), and H3 headings for individual active and closed faults. No heading levels are skipped and individual fault headings are correctly nested beneath their relevant fault-status section. The `Fault options` heading is part of the GOV.UK Tabs component and labels the group of tab choices.
 
+Browser zoom and reflow were tested at 200% and 400%. No text or controls were clipped, no content was lost, and no horizontal scrollbar appeared. At 400% zoom, the GOV.UK Tabs component changed to its small-screen behaviour and displayed the three sections sequentially on one page rather than as horizontal tabs. This was accepted as appropriate responsive behaviour because all content remained readable and operable without two-dimensional scrolling.
+
 ## Manual testing still to perform
 
 Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
 - test the fault form with validation errors and confirm that the reporting tab remains visible and the error summary receives focus when GOV.UK Frontend JavaScript is active
-- zoom browser content to 200% and 400% and check for loss of content or horizontal scrolling where avoidable
 - use a colour contrast analyser for custom colours
 - where practical, test core journeys with a screen reader
 
