@@ -25,6 +25,8 @@ The review also identified areas for improvement:
 - successful fault actions did not provide explicit confirmation
 - the account and administration links were not contained in a navigation landmark
 - the email-domain table lacked a caption and explicit column scopes
+- the faults page did not group active and closed faults under clear section headings, and individual fault titles sat at the same heading level as the reporting task
+- active and closed faults were intermingled by creation date even though reviewing active faults before reporting can help avoid duplicate reports
 - accessibility was not represented in automated tests as part of continuous integration
 - no formal accessibility audit or disabled-user research had been completed
 
@@ -41,18 +43,25 @@ The accessibility improvement branch makes the following changes:
 7. The email-domain table now includes a descriptive caption and `scope="col"` on its headers.
 8. A transparent in-service accessibility and testing page records the current approach and limitations.
 9. Automated tests cover selected accessibility-related structure and behaviour and therefore run as part of the existing pytest continuous-integration step.
+10. The faults page now uses a clearer information hierarchy: `Faults` as the H1, on-page links to `Active faults`, `Report a fault` and `Closed faults`, H2 section headings, and H3 headings for individual faults. Active faults are presented first so users can review current issues before submitting a new report.
 
-## Manual testing to perform
+## Manual testing completed so far
 
-Automated checks should be supplemented by manual testing. The following checks are recommended for the assessment evidence:
+Initial manual review used the browser keyboard and the Web Developer document outline. The original revised page had one H1 followed by `Report a fault` and every individual fault as H2 headings. Although this was not an automated accessibility error, navigating the page prompted a review of whether the structure communicated the service clearly enough.
+
+Static fault information has deliberately not been added to the tab order because ordinary text should not become an unnecessary keyboard stop. Instead, the page structure has been improved so assistive-technology users can navigate faults by headings and sections, while keyboard focus remains reserved for interactive controls.
+
+## Manual testing still to perform
+
+Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
 - complete the main journeys using only the keyboard
 - confirm that focus is visible and follows a logical order
 - test the fault form with validation errors and confirm that the error summary receives focus when GOV.UK Frontend JavaScript is active
 - zoom browser content to 200% and 400% and check for loss of content or horizontal scrolling where avoidable
-- inspect headings and landmarks
+- re-check headings and landmarks after the information-hierarchy change
 - use WAVE to identify automatically detectable issues
-- use axe DevTools as a second automated scan
+- use Web Developer to inspect document structure
 - use a colour contrast analyser for custom colours
 - where practical, test core journeys with a screen reader
 
