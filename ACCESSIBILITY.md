@@ -59,6 +59,8 @@ A keyboard-only retest of the tabbed faults page was completed after the redesig
 
 WAVE was repeated after the final navigation and tab changes. The current standard-user faults page returned zero errors, zero contrast errors and zero alerts, with an AIM score of 10 out of 10. This improves on the earlier result by removing the redundant-link alert. The result is treated as evidence that no automatically detectable WAVE issues were present on the tested page, not as proof of full accessibility or WCAG conformance.
 
+Accessibility Insights for Web FastPass was also run against the standard-user faults page. Its automated checks reported zero failed instances. This provides a second automated check using a different tool, but is treated only as evidence that no failures were detected by the rules exercised in that run. Manual and assisted checks are still required because automated testing cannot determine all accessibility issues.
+
 The Web Developer document outline was also repeated after the tab redesign. The final structure contains one H1 (`Faults`), H2 headings for the tab group and the three task areas (`Fault options`, `Active faults`, `Report a fault`, `Closed faults`), and H3 headings for individual active and closed faults. No heading levels are skipped and individual fault headings are correctly nested beneath their relevant fault-status section. The `Fault options` heading is part of the GOV.UK Tabs component and labels the group of tab choices.
 
 Browser zoom and reflow were tested at 200% and 400%. No text or controls were clipped, no content was lost, and no horizontal scrollbar appeared. At 400% zoom, the GOV.UK Tabs component changed to its small-screen behaviour and displayed the three sections sequentially on one page rather than as horizontal tabs. This was accepted as appropriate responsive behaviour because all content remained readable and operable without two-dimensional scrolling.
@@ -69,9 +71,10 @@ Colour contrast was reviewed using WAVE's Contrast panel on the validation-error
 
 ## Manual testing still to perform
 
-Automated checks should be supplemented by further manual testing. The following check is recommended for the assessment evidence:
+Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
-- where practical, test core journeys with a screen reader
+- complete the Accessibility Insights for Web FastPass tab-stop check
+- where practical, test a core journey with a screen reader
 
 ## Limits of the evidence
 
