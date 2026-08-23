@@ -1,26 +1,73 @@
 {% extends "base.html" %}
-{% block title %}{% if errors %}Error: {% endif %}Reported faults{% endblock %}
+{% block title %}{% if errors %}Error: {% endif %}Faults{% endblock %}
 {% block content %}
+{% macro fault_card(fault) -%}
+<section class="app-fault" aria-labelledby="fault-{{ fault.id }}">
+    <h3 class="govuk-heading-m" id="fault-{{ fault.id }}">{{ fault.title }}</h3>
+    <strong class="govuk-tag{% if fault.status == 'Closed' %} govuk-tag--green{% else %} govuk-tag--yellow{% endif %}">{{ fault.status }}</strong>
+    <dl class="govuk-summary-list govuk-!-margin-top-4">
+        <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Description</dt><dd class="govuk-summary-list__value">{{ fault.description }}</dd></div>
+        <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Regional centre</dt><dd class="govuk-summary-list__value">{{ fault.building_name }}</dd></div>
+        <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Submitted</dt><dd class="govuk-summary-list__value">{{ fault.submitted_by_name }} on {{ fault.date_created | datetimeformat }}</dd></div>
+        {% if fault.status == 'Closed' and fault.closed_by_name and fault.date_closed %}<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Closed</dt><dd class="govuk-summary-list__value">{{ fault.closed_by_name }} on {{ fault.date_closed | datetimeformat }}</dd></div>{% endif %}
+    </dl>
+    <div class="app-actions">
+        {% if fault.status != 'Closed' %}
+        <a class="govuk-button govuk-button--secondary" href="{{ url_for('confirm_close_fault', fault_id=fault.id) }}">Mark as closed<span class="govuk-visually-hidden">: {{ fault.title }}</span></a>
+        {% endif %}
+        {% if current_user.role == 'admin' %}
+        <a class="govuk-button govuk-button--warning" href="{{ url_for('confirm_delete_fault', fault_id=fault.id) }}">Delete fault<span class="govuk-visually-hidden">: {{ fault.title }}</span></a>
+        {% endif %}
+    </div>
+</section>
+{%- endmacro %}
+
+{% set active_faults = faults | rejectattr('status', 'equalto', 'Closed') | list %}
+{% set closed_faults = faults | selectattr('status', 'equalto', 'Closed') | list %}
+
+{% if errors %}
+<div class="govuk-error-summary" data-module="govuk-error-summary">
+    <div role="alert">
+        <h2 class="govuk-error-summary__title">There is a problem</h2>
+        <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+                {% for field, message in errors.items() %}
+                <li><a href="#{{ field }}">{{ message }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<h1 class="govuk-heading-xl">Faults</h1>
+<p class="govuk-body">Check active faults before reporting a new problem to help avoid duplicate reports.</p>
+
+<nav aria-label="On this page" class="govuk-!-margin-bottom-7">
+    <p class="govuk-heading-s govuk-!-margin-bottom-2">On this page</p>
+    <ul class="govuk-list">
+        <li><a class="govuk-link" href="#active-faults">Active faults</a></li>
+        <li><a class="govuk-link" href="#report-a-fault">Report a fault</a></li>
+        <li><a class="govuk-link" href="#closed-faults">Closed faults</a></li>
+    </ul>
+</nav>
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l" id="active-faults">Active faults</h2>
+        {% if active_faults %}
+            {% for fault in active_faults %}
+                {{ fault_card(fault) }}
+            {% endfor %}
+        {% else %}
+        <p class="govuk-body">There are no active faults.</p>
+        {% endif %}
+    </div>
+</div>
+
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        {% if errors %}
-        <div class="govuk-error-summary" data-module="govuk-error-summary">
-            <div role="alert">
-                <h2 class="govuk-error-summary__title">There is a problem</h2>
-                <div class="govuk-error-summary__body">
-                    <ul class="govuk-list govuk-error-summary__list">
-                        {% for field, message in errors.items() %}
-                        <li><a href="#{{ field }}">{{ message }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <h1 class="govuk-heading-xl">Reported faults</h1>
-
-        <h2 class="govuk-heading-l">Report a fault</h2>
+        <h2 class="govuk-heading-l" id="report-a-fault">Report a fault</h2>
         <p class="govuk-body">All fields are required.</p>
         <form method="post" action="{{ url_for('submit_fault') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -57,29 +104,13 @@
 
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-        {% if faults %}
-        {% for fault in faults %}
-        <section class="app-fault" aria-labelledby="fault-{{ fault.id }}">
-            <h2 class="govuk-heading-m" id="fault-{{ fault.id }}">{{ fault.title }}</h2>
-            <strong class="govuk-tag{% if fault.status == 'Closed' %} govuk-tag--green{% else %} govuk-tag--yellow{% endif %}">{{ fault.status }}</strong>
-            <dl class="govuk-summary-list govuk-!-margin-top-4">
-                <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Description</dt><dd class="govuk-summary-list__value">{{ fault.description }}</dd></div>
-                <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Regional centre</dt><dd class="govuk-summary-list__value">{{ fault.building_name }}</dd></div>
-                <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Submitted</dt><dd class="govuk-summary-list__value">{{ fault.submitted_by_name }} on {{ fault.date_created | datetimeformat }}</dd></div>
-                {% if fault.status == 'Closed' and fault.closed_by_name and fault.date_closed %}<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Closed</dt><dd class="govuk-summary-list__value">{{ fault.closed_by_name }} on {{ fault.date_closed | datetimeformat }}</dd></div>{% endif %}
-            </dl>
-            <div class="app-actions">
-                {% if fault.status != 'Closed' %}
-                <a class="govuk-button govuk-button--secondary" href="{{ url_for('confirm_close_fault', fault_id=fault.id) }}">Mark as closed<span class="govuk-visually-hidden">: {{ fault.title }}</span></a>
-                {% endif %}
-                {% if current_user.role == 'admin' %}
-                <a class="govuk-button govuk-button--warning" href="{{ url_for('confirm_delete_fault', fault_id=fault.id) }}">Delete fault<span class="govuk-visually-hidden">: {{ fault.title }}</span></a>
-                {% endif %}
-            </div>
-        </section>
-        {% endfor %}
+        <h2 class="govuk-heading-l" id="closed-faults">Closed faults</h2>
+        {% if closed_faults %}
+            {% for fault in closed_faults %}
+                {{ fault_card(fault) }}
+            {% endfor %}
         {% else %}
-        <p class="govuk-body">No faults have been reported.</p>
+        <p class="govuk-body">There are no closed faults.</p>
         {% endif %}
     </div>
 </div>
