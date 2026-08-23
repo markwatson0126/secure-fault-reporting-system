@@ -11,41 +11,44 @@
     <script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
     <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
 
-    <header class="app-generic-header" role="banner">
-        <div class="govuk-width-container">
-            <a class="app-generic-header__link" href="{{ url_for('index') }}">
-                <svg class="app-generic-header__logo" width="28" height="30" viewBox="0 0 28 30" fill="currentColor" aria-hidden="true" focusable="false">
-                    <circle cx="13.5549" cy="4.21349" r="4.21349" />
-                    <circle cx="13.5549" cy="25.7865" r="4.21349" />
-                    <circle cx="22.8963" cy="9.6068" r="4.21349" />
-                    <circle cx="4.2135" cy="20.3932" r="4.21349" />
-                    <circle cx="22.8963" cy="20.3932" r="4.21349" />
-                    <circle cx="4.21351" cy="9.60674" r="4.21349" />
-                </svg>
-                Secure Fault Reporting and Resolution System
-            </a>
+    <header class="govuk-generic-header" role="banner">
+        <div class="govuk-generic-header__container govuk-width-container">
+            <div class="govuk-generic-header__logo">
+                <a class="govuk-generic-header__homepage-link" href="{{ url_for('index') }}">
+                    <svg width="28" height="30" viewBox="0 0 28 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <circle cx="13.5549" cy="4.21349" r="4.21349" />
+                        <circle cx="13.5549" cy="25.7865" r="4.21349" />
+                        <circle cx="22.8963" cy="9.6068" r="4.21349" />
+                        <circle cx="4.2135" cy="20.3932" r="4.21349" />
+                        <circle cx="22.8963" cy="20.3932" r="4.21349" />
+                        <circle cx="4.21351" cy="9.60674" r="4.21349" />
+                    </svg>
+                    Secure Fault Reporting and Resolution System
+                </a>
+            </div>
         </div>
     </header>
 
     {% if current_user.is_authenticated %}
-    <div class="app-account-bar">
+    <nav class="app-account-bar" aria-label="Account and administration">
         <div class="govuk-width-container">
             <span class="govuk-body-s">Signed in as <strong>{{ current_user.first_name }} {{ current_user.last_name }}</strong></span>
+            <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('index') }}">Faults</a>
             {% if current_user.role == 'admin' %}
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_users') }}">Users</a>
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('admin_domains') }}">Email domains</a>
             {% endif %}
             <a class="govuk-link govuk-body-s govuk-!-margin-left-3" href="{{ url_for('logout') }}">Sign out</a>
         </div>
-    </div>
+    </nav>
     {% endif %}
 
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-width-container">
             {% for category, message in get_flashed_messages(with_categories=true) %}
             {% if category == 'success' %}
-            <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="success-title" data-module="govuk-notification-banner">
-                <div class="govuk-notification-banner__header"><h2 class="govuk-notification-banner__title" id="success-title">Success</h2></div>
+            <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="success-title-{{ loop.index }}" data-module="govuk-notification-banner">
+                <div class="govuk-notification-banner__header"><h2 class="govuk-notification-banner__title" id="success-title-{{ loop.index }}">Success</h2></div>
                 <div class="govuk-notification-banner__content"><p class="govuk-notification-banner__heading">{{ message }}</p></div>
             </div>
             {% endif %}
@@ -56,6 +59,7 @@
 
     <footer class="app-footer">
         <div class="govuk-width-container">
+            <p class="govuk-body-s"><a class="govuk-link" href="{{ url_for('accessibility') }}">Accessibility and testing</a></p>
             <p class="govuk-body-s govuk-!-margin-bottom-0">Level 6 Software Engineering and DevOps project</p>
         </div>
     </footer>
