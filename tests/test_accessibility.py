@@ -220,3 +220,44 @@ def test_accessibility_page_is_transparent_about_limits(client):
     assert b"does not claim full Web Content Accessibility Guidelines" in response.data
     assert b"has not yet had a formal accessibility audit" in response.data
     assert b"usability testing with disabled users" in response.data
+
+
+def test_fault_page_has_on_page_navigation_and_logical_heading_order(client):
+    add_user(client.application, "reporter@hmrc.gov.uk")
+    login(client, "reporter@hmrc.gov.uk")
+    add_fault(client.application, "Active lighting fault")
+    closed_id = add_fault(client.application, "Resolved heating fault")
+    with client.application.app_context():
+        db = get_db()
+        user_id = db.execute(
+            "SELECT id FROM users WHERE email = 'reporter@hmrc.gov.uk'"
+        ).fetchone()[0]
+        db.execute(
+            """
+            UPDATE faults
+            SET status = 'Closed', closed_by = ?, date_closed = '2026-08-23'
+            WHERE id = ?
+            """,
+            (user_id, closed_id),
+        )
+        db.commit()
+
+    page = client.get("/").get_data(as_text=True)
+
+    assert '<h1 class="govuk-heading-xl">Faults</h1>' in page
+    assert 'aria-label="On this page"' in page
+    assert 'href="#active-faults">Active faults</a>' in page
+    assert 'href="#report-a-fault">Report a fault</a>' in page
+    assert 'href="#closed-faults">Closed faults</a>' in page
+    assert '<h2 class="govuk-heading-l" id="active-faults">Active faults</h2>' in page
+    assert '<h2 class="govuk-heading-l" id="report-a-fault">Report a fault</h2>' in page
+    assert '<h2 class="govuk-heading-l" id="closed-faults">Closed faults</h2>' in page
+    assert '>Active lighting fault</h3>' in page
+    assert '>Resolved heating fault</h3>' in page
+
+    active_pos = page.index('id="active-faults"')
+    active_fault_pos = page.index('>Active lighting fault</h3>')
+    report_pos = page.index('id="report-a-fault"')
+    closed_pos = page.index('id="closed-faults"')
+    closed_fault_pos = page.index('>Resolved heating fault</h3>')
+    assert active_pos < active_fault_pos < report_pos < closed_pos < closed_fault_pos
