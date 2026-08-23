@@ -57,11 +57,12 @@ Static fault information has deliberately not been added to the tab order becaus
 
 A keyboard-only retest of the tabbed faults page was completed after the redesign. Focus was visibly indicated, the active tab could be changed with the Left and Right Arrow keys, Tab moved into the currently displayed panel, the `Report a fault` controls followed a logical order (Title, Description, Regional centre, Submit fault), hidden tab panels did not enter the tab sequence, and no keyboard trap was observed.
 
+WAVE was repeated after the final navigation and tab changes. The current standard-user faults page returned zero errors, zero contrast errors and zero alerts, with an AIM score of 10 out of 10. This improves on the earlier result by removing the redundant-link alert. The result is treated as evidence that no automatically detectable WAVE issues were present on the tested page, not as proof of full accessibility or WCAG conformance.
+
 ## Manual testing still to perform
 
 Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
 
-- repeat WAVE after the navigation and tab changes
 - test the fault form with validation errors and confirm that the reporting tab remains visible and the error summary receives focus when GOV.UK Frontend JavaScript is active
 - zoom browser content to 200% and 400% and check for loss of content or horizontal scrolling where avoidable
 - re-check headings and landmarks after the tab change
