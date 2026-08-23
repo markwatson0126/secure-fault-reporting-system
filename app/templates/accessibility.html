@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Accessibility and testing{% endblock %}
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Accessibility and testing</h1>
+
+        <p class="govuk-body">This is a demonstration application created for academic assessment. It is not a production service and it does not claim full Web Content Accessibility Guidelines (WCAG) conformance.</p>
+
+        <h2 class="govuk-heading-l">Accessibility approach</h2>
+        <p class="govuk-body">The application uses semantic HTML and GOV.UK Frontend components as a foundation. Accessibility is also considered in the way components are combined into complete user journeys.</p>
+        <p class="govuk-body">Recent improvements include clearer form errors, preserved form values after validation errors, visible confirmation before destructive or irreversible actions, contextual labels for repeated actions, semantic navigation and improved table structure.</p>
+
+        <h2 class="govuk-heading-l">Testing carried out</h2>
+        <p class="govuk-body">The project includes automated tests for selected accessibility-related markup and behaviour. Manual checks should also cover keyboard-only operation, focus order, zoom and reflow, colour contrast and assistive technology.</p>
+
+        <h2 class="govuk-heading-l">Known limitations</h2>
+        <p class="govuk-body">Automated tests cannot demonstrate that a service is accessible to every user. This prototype has not yet had a formal accessibility audit or usability testing with disabled users. Those activities would be required before making a stronger accessibility claim.</p>
+
+        <h2 class="govuk-heading-l">Further work</h2>
+        <p class="govuk-body">Future work should include testing with disabled users, broader assistive-technology testing, automated accessibility scanning in the development workflow, continued monitoring of GOV.UK Frontend and WCAG guidance, and a monitored feedback route for an operational service.</p>
+    </div>
+</div>
+{% endblock %}
