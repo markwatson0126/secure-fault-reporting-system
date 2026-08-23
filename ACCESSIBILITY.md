@@ -65,11 +65,12 @@ Browser zoom and reflow were tested at 200% and 400%. No text or controls were c
 
 Validation testing identified a further interaction issue. Adding the `#report-a-fault` fragment kept the reporting tab selected after a validation error, but the browser initially scrolled to the start of the tab panel while the error summary remained above it and therefore outside the viewport. The error summary was moved to the start of the `Report a fault` panel. A manual retest confirmed that the reporting tab remained selected and the validation summary was immediately visible with the erroneous fields in the same panel. This was judged a clear improvement because the user no longer has to discover that relevant error information exists above the current viewport.
 
+Colour contrast was reviewed using WAVE's Contrast panel on the validation-error state. WAVE reported no contrast errors on the page. The red validation text was identified as `#CA3535` against a white `#FFFFFF` background, giving a contrast ratio of 5.15:1. WAVE reported this as a pass for WCAG AA for normal-sized text and a fail for AAA. The result is recorded as evidence that the tested validation text meets the AA contrast threshold, not as a complete manual contrast audit of every possible interface state.
+
 ## Manual testing still to perform
 
-Automated checks should be supplemented by further manual testing. The following checks are recommended for the assessment evidence:
+Automated checks should be supplemented by further manual testing. The following check is recommended for the assessment evidence:
 
-- use a colour contrast analyser for custom colours
 - where practical, test core journeys with a screen reader
 
 ## Limits of the evidence
